@@ -1,0 +1,20 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+artifacts/
+
+# CMake / C++
+build/
+out/
+CMakeUserPresets.json
+
+# Rider / VS Code
+.idea/
+.vscode/
+
+# Divers
+*.log
+Thumbs.db

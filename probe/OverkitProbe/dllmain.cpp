@@ -1,37 +1,134 @@
+#include <chrono>
+#include <cstdio>
+
 #include <Mod/CppUserModBase.hpp>
 #include <DynamicOutput/Output.hpp>
+#include <Unreal/UObjectGlobals.hpp>
+#include <Unreal/UObject.hpp>
+
+#include "WsServer.hpp"
 
 using namespace RC;
 
+namespace
+{
+    constexpr std::uint16_t ProbePort = 47800;
+
+    // FVector UE5 (doubles). Résolu par nom de propriété via la réflexion ;
+    // seule la disposition interne standard X/Y/Z du type moteur est supposée.
+    struct Vector3d
+    {
+        double X;
+        double Y;
+        double Z;
+    };
+}
+
 // Sonde Overkit — spike Phase 0.
-// Étape 1 : valider le chargement du mod C++ et le cycle de vie UE4SS.
-// Étape 2 (à venir) : lecture position joueur + heure in-game par réflexion,
-// publication sur WebSocket local (127.0.0.1:47800). Lecture seule stricte (P1).
+// Collecte position joueur (10 Hz) par réflexion, lecture seule stricte (P1),
+// et publie sur un WebSocket local (127.0.0.1:47800, EXG-002).
+// L'heure in-game est annoncée `unavailable` tant que sa classe source n'est
+// pas identifiée (travail de mapping en cours, spike Lua).
 class OverkitProbe : public CppUserModBase
 {
 public:
     OverkitProbe() : CppUserModBase()
     {
         ModName = STR("OverkitProbe");
-        ModVersion = STR("0.0.1");
+        ModVersion = STR("0.1.0");
         ModDescription = STR("Sonde Overkit - lecture seule de l'etat du jeu");
         ModAuthors = STR("Nallraen");
 
-        Output::send<LogLevel::Verbose>(STR("[OverkitProbe] Construit (v0.0.1)\n"));
+        Output::send<LogLevel::Verbose>(STR("[OverkitProbe] Construit (v0.1.0)\n"));
     }
 
-    ~OverkitProbe() override = default;
+    ~OverkitProbe() override
+    {
+        m_server.stop();
+    }
 
     auto on_unreal_init() -> void override
     {
         Output::send<LogLevel::Verbose>(STR("[OverkitProbe] Unreal initialise - reflexion disponible\n"));
+
+        // EXG-004 : annonce des versions au premier contact.
+        const std::string handshake =
+            R"({"type":"handshake","probe_version":"0.1.0","schema_version":"0.1-spike",)"
+            R"("game_build":"unknown","mapping_version":"none"})";
+
+        m_server.start(ProbePort, handshake, [](const std::string& message) {
+            Output::send<LogLevel::Verbose>(STR("[OverkitProbe] [ws] {}\n"), to_wstring(message));
+        });
     }
 
     auto on_update() -> void override
     {
-        // Appelé à chaque tick UE4SS. Les collecteurs cadencés (position 10 Hz,
-        // heure 1 Hz) viendront ici, chacun avec son propre échantillonnage.
+        // Appelé sur le thread jeu : les lectures de réflexion se font ici,
+        // cadencées pour rester loin du budget (< 0,5 ms par tick, EXG probe).
+        const auto now = std::chrono::steady_clock::now();
+        if (now - m_last_push < std::chrono::milliseconds(100)) // 10 Hz
+        {
+            return;
+        }
+        m_last_push = now;
+
+        bool ok = false;
+        Vector3d pos{};
+        try
+        {
+            auto* pawn = Unreal::UObjectGlobals::FindFirstOf(STR("PalPlayerCharacter"));
+            if (pawn)
+            {
+                auto** root = pawn->GetValuePtrByPropertyNameInChain<Unreal::UObject*>(STR("RootComponent"));
+                if (root && *root)
+                {
+                    auto* location = (*root)->GetValuePtrByPropertyNameInChain<Vector3d>(STR("RelativeLocation"));
+                    if (location)
+                    {
+                        pos = *location;
+                        ok = true;
+                    }
+                }
+            }
+        }
+        catch (...)
+        {
+            // EXG-003 : un chemin qui ne se résout pas => champ indisponible,
+            // jamais de crash ni d'arrêt global.
+            ok = false;
+        }
+
+        const auto t_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+                              now.time_since_epoch())
+                              .count();
+
+        char json[512];
+        if (ok)
+        {
+            std::snprintf(json, sizeof(json),
+                          R"({"type":"state","t_ms":%lld,"player":{"status":"ok",)"
+                          R"("x":%.1f,"y":%.1f,"z":%.1f},)"
+                          R"("world":{"time":{"status":"unavailable"}}})",
+                          static_cast<long long>(t_ms), pos.X, pos.Y, pos.Z);
+        }
+        else
+        {
+            std::snprintf(json, sizeof(json),
+                          R"({"type":"state","t_ms":%lld,"player":{"status":"unavailable"},)"
+                          R"("world":{"time":{"status":"unavailable"}}})",
+                          static_cast<long long>(t_ms));
+        }
+        m_server.publish(json);
     }
+
+private:
+    static auto to_wstring(const std::string& input) -> std::wstring
+    {
+        return {input.begin(), input.end()};
+    }
+
+    Overkit::WsServer m_server;
+    std::chrono::steady_clock::time_point m_last_push{};
 };
 
 #define OVERKIT_PROBE_API __declspec(dllexport)

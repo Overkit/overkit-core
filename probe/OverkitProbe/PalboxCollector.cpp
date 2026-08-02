@@ -1,4 +1,5 @@
-#include "PalboxCollector.hpp"
+﻿#include "PalboxCollector.hpp"
+#include "Mapping.hpp"
 #include "WorldCollectors.hpp"
 
 #include <chrono>
@@ -100,7 +101,7 @@ namespace
     auto read_container_guid(Unreal::UObject* container) -> Guid128
     {
         Unreal::UStruct* leaf = nullptr;
-        void* guid_ptr = resolve_struct_path(container->GetClassPrivate(), container, {STR("ID"), STR("ID")}, &leaf);
+        void* guid_ptr = resolve_struct_path(container->GetClassPrivate(), container, {OVKM("prop.id", "ID"), OVKM("prop.id", "ID")}, &leaf);
         return guid_ptr ? *static_cast<Guid128*>(guid_ptr) : Guid128{};
     }
 
@@ -109,7 +110,7 @@ namespace
     auto emit_pal(Unreal::UObject* parameter, const std::string& instance_id) -> std::string
     {
         auto* save_prop = static_cast<Unreal::FStructProperty*>(
-            find_property(parameter->GetClassPrivate(), STR("SaveParameter")));
+            find_property(parameter->GetClassPrivate(), OVKM("prop.save_parameter", "SaveParameter")));
         if (!save_prop)
         {
             return {};
@@ -123,17 +124,17 @@ namespace
         };
 
         std::wstring species;
-        if (auto* p = find_property(save_struct, STR("CharacterID")))
+        if (auto* p = find_property(save_struct, OVKM("prop.character_id", "CharacterID")))
         {
             species = p->ContainerPtrToValuePtr<Unreal::FName>(save)->ToString();
         }
-        if (species.empty() || read_byte(STR("IsPlayer")) > 0)
+        if (species.empty() || read_byte(OVKM("prop.is_player", "IsPlayer")) > 0)
         {
             return {};
         }
 
         std::wstring nickname;
-        if (auto* p = find_property(save_struct, STR("NickName")))
+        if (auto* p = find_property(save_struct, OVKM("prop.nickname", "NickName")))
         {
             const auto& chars = p->ContainerPtrToValuePtr<Unreal::FString>(save)->GetCharArray();
             if (chars.Num() > 0)
@@ -143,7 +144,7 @@ namespace
         }
 
         std::string passives;
-        if (auto* p = find_property(save_struct, STR("PassiveSkillList")))
+        if (auto* p = find_property(save_struct, OVKM("prop.passive_skill_list", "PassiveSkillList")))
         {
             auto* names = p->ContainerPtrToValuePtr<Unreal::TArray<Unreal::FName>>(save);
             for (std::int32_t n = 0; n < names->Num(); ++n)
@@ -156,23 +157,23 @@ namespace
             }
         }
 
-        const auto gender_raw = read_byte(STR("Gender"));
+        const auto gender_raw = read_byte(OVKM("prop.gender", "Gender"));
         const char* gender = gender_raw == 1 ? "male" : gender_raw == 2 ? "female" : "unknown";
 
         return std::format(
             R"({{"instance_id":"{}","species_id":"{}","nickname":"{}","gender":"{}","level":{},)"
             R"("passives":[{}],"talents":{{"hp":{},"melee":{},"shot":{},"defense":{}}}}})",
             instance_id, json_escape(species), json_escape(nickname), gender,
-            read_byte(STR("Level")), passives,
-            read_byte(STR("Talent_HP")), read_byte(STR("Talent_Melee")),
-            read_byte(STR("Talent_Shot")), read_byte(STR("Talent_Defense")));
+            read_byte(OVKM("prop.level", "Level")), passives,
+            read_byte(OVKM("prop.talent_hp", "Talent_HP")), read_byte(OVKM("prop.talent_melee", "Talent_Melee")),
+            read_byte(OVKM("prop.talent_shot", "Talent_Shot")), read_byte(OVKM("prop.talent_defense", "Talent_Defense")));
     }
 
     // Le SlotId d'un SaveParameter pointe-t-il vers le conteneur donné ?
     auto save_belongs_to(Unreal::UObject* parameter, const Guid128& container_guid) -> bool
     {
         auto* save_prop = static_cast<Unreal::FStructProperty*>(
-            find_property(parameter->GetClassPrivate(), STR("SaveParameter")));
+            find_property(parameter->GetClassPrivate(), OVKM("prop.save_parameter", "SaveParameter")));
         if (!save_prop)
         {
             return false;
@@ -180,7 +181,7 @@ namespace
         Unreal::UStruct* leaf = nullptr;
         void* guid_ptr = resolve_struct_path(save_prop->GetStruct().Get(),
                                              save_prop->ContainerPtrToValuePtr<void>(parameter),
-                                             {STR("SlotId"), STR("ContainerId"), STR("ID")}, &leaf);
+                                             {OVKM("prop.slot_id", "SlotId"), OVKM("prop.container_id", "ContainerId"), OVKM("prop.id", "ID")}, &leaf);
         return guid_ptr && *static_cast<Guid128*>(guid_ptr) == container_guid;
     }
 
@@ -189,7 +190,7 @@ namespace
     // donne le vrai total possédé, synchronisé ou non.
     auto count_occupied_slots(Unreal::UObject* container) -> int
     {
-        auto* slot_array = container->GetValuePtrByPropertyNameInChain<Unreal::TArray<Unreal::UObject*>>(STR("SlotArray"));
+        auto* slot_array = container->GetValuePtrByPropertyNameInChain<Unreal::TArray<Unreal::UObject*>>(OVKM("prop.slot_array", "SlotArray"));
         if (!slot_array)
         {
             return -1;
@@ -203,13 +204,13 @@ namespace
                 continue;
             }
             auto* handle_prop = static_cast<Unreal::FStructProperty*>(
-                find_property(slot->GetClassPrivate(), STR("ReplicateHandleID")));
+                find_property(slot->GetClassPrivate(), OVKM("prop.slot_handle_id", "ReplicateHandleID")));
             if (!handle_prop)
             {
                 continue;
             }
             void* handle = handle_prop->ContainerPtrToValuePtr<void>(slot);
-            if (auto* id_prop = find_property(handle_prop->GetStruct().Get(), STR("InstanceId")))
+            if (auto* id_prop = find_property(handle_prop->GetStruct().Get(), OVKM("prop.instance_id", "InstanceId")))
             {
                 if (!id_prop->ContainerPtrToValuePtr<Guid128>(handle)->is_zero())
                 {
@@ -224,7 +225,7 @@ namespace
     auto container_member_ids(Unreal::UObject* container) -> std::string
     {
         std::string out;
-        auto* slot_array = container->GetValuePtrByPropertyNameInChain<Unreal::TArray<Unreal::UObject*>>(STR("SlotArray"));
+        auto* slot_array = container->GetValuePtrByPropertyNameInChain<Unreal::TArray<Unreal::UObject*>>(OVKM("prop.slot_array", "SlotArray"));
         if (!slot_array)
         {
             return out;
@@ -237,13 +238,13 @@ namespace
                 continue;
             }
             auto* handle_prop = static_cast<Unreal::FStructProperty*>(
-                find_property(slot->GetClassPrivate(), STR("ReplicateHandleID")));
+                find_property(slot->GetClassPrivate(), OVKM("prop.slot_handle_id", "ReplicateHandleID")));
             if (!handle_prop)
             {
                 continue;
             }
             void* handle = handle_prop->ContainerPtrToValuePtr<void>(slot);
-            if (auto* id_prop = find_property(handle_prop->GetStruct().Get(), STR("InstanceId")))
+            if (auto* id_prop = find_property(handle_prop->GetStruct().Get(), OVKM("prop.instance_id", "InstanceId")))
             {
                 const auto* guid = id_prop->ContainerPtrToValuePtr<Guid128>(handle);
                 if (!guid->is_zero())
@@ -262,21 +263,21 @@ namespace
     // Conteneur de l'équipe active : PalOtomoHolderComponentBase.CharacterContainer.
     auto find_party_container() -> Unreal::UObject*
     {
-        auto* holder = Unreal::UObjectGlobals::FindFirstOf(STR("PalOtomoHolderComponentBase"));
-        return holder ? read_object(holder, STR("CharacterContainer")) : nullptr;
+        auto* holder = Unreal::UObjectGlobals::FindFirstOf(OVKM("class.otomo_holder", "PalOtomoHolderComponentBase"));
+        return holder ? read_object(holder, OVKM("prop.character_container", "CharacterContainer")) : nullptr;
     }
 
     // Voie principale : IndividualParameterMap du PalCharacterManager (source
     // serveur complète, indépendante de la réplication paresseuse des slots).
     auto collect_from_manager(const std::vector<Guid128>& targets, std::string& pals) -> bool
     {
-        auto* manager = Unreal::UObjectGlobals::FindFirstOf(STR("PalCharacterManager"));
+        auto* manager = Unreal::UObjectGlobals::FindFirstOf(OVKM("class.character_manager", "PalCharacterManager"));
         if (!manager)
         {
             return false;
         }
         auto* map_property = static_cast<Unreal::FMapProperty*>(
-            find_property(manager->GetClassPrivate(), STR("IndividualParameterMap")));
+            find_property(manager->GetClassPrivate(), OVKM("prop.individual_parameter_map", "IndividualParameterMap")));
         if (!map_property)
         {
             return false;
@@ -317,7 +318,7 @@ namespace
             {
                 auto* key_struct = static_cast<Unreal::FStructProperty*>(key_prop);
                 void* key = key_prop->ContainerPtrToValuePtr<void>(pair);
-                if (auto* id_prop = find_property(key_struct->GetStruct().Get(), STR("InstanceId")))
+                if (auto* id_prop = find_property(key_struct->GetStruct().Get(), OVKM("prop.instance_id", "InstanceId")))
                 {
                     instance_id = id_prop->ContainerPtrToValuePtr<Guid128>(key)->to_string();
                 }
@@ -341,7 +342,7 @@ namespace
     // d'un serveur distant) — statut `degraded`.
     auto collect_from_slots(Unreal::UObject* container, std::string& pals) -> void
     {
-        auto* slot_array = container->GetValuePtrByPropertyNameInChain<Unreal::TArray<Unreal::UObject*>>(STR("SlotArray"));
+        auto* slot_array = container->GetValuePtrByPropertyNameInChain<Unreal::TArray<Unreal::UObject*>>(OVKM("prop.slot_array", "SlotArray"));
         if (!slot_array)
         {
             return;
@@ -353,7 +354,7 @@ namespace
             {
                 continue;
             }
-            auto* parameter = read_object(slot, STR("ReplicateIndividualParameter"));
+            auto* parameter = read_object(slot, OVKM("prop.slot_parameter", "ReplicateIndividualParameter"));
             if (!parameter)
             {
                 continue;
@@ -361,10 +362,10 @@ namespace
 
             std::string instance_id = "unknown";
             if (auto* handle_prop = static_cast<Unreal::FStructProperty*>(
-                    find_property(slot->GetClassPrivate(), STR("ReplicateHandleID"))))
+                    find_property(slot->GetClassPrivate(), OVKM("prop.slot_handle_id", "ReplicateHandleID"))))
             {
                 void* handle = handle_prop->ContainerPtrToValuePtr<void>(slot);
-                if (auto* id_prop = find_property(handle_prop->GetStruct().Get(), STR("InstanceId")))
+                if (auto* id_prop = find_property(handle_prop->GetStruct().Get(), OVKM("prop.instance_id", "InstanceId")))
                 {
                     instance_id = id_prop->ContainerPtrToValuePtr<Guid128>(handle)->to_string();
                 }
@@ -399,13 +400,13 @@ namespace Overkit
 
         try
         {
-            auto* player_state = Unreal::UObjectGlobals::FindFirstOf(STR("PalPlayerState"));
+            auto* player_state = Unreal::UObjectGlobals::FindFirstOf(OVKM("class.player_state", "PalPlayerState"));
             if (!player_state)
             {
                 return true;
             }
-            auto* storage = read_object(player_state, STR("PalStorage"));
-            auto* container = storage ? read_object(storage, STR("TargetContainer")) : nullptr;
+            auto* storage = read_object(player_state, OVKM("prop.pal_storage", "PalStorage"));
+            auto* container = storage ? read_object(storage, OVKM("prop.target_container", "TargetContainer")) : nullptr;
             if (!container)
             {
                 return true;

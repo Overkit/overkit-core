@@ -17,6 +17,20 @@
       "notes": "Répliqué (fonctionne en multijoueur). Validé : ticks 186277070000000 = jour 215, 14h21, cohérent avec l'écran."
     }
   },
+  "fields_palbox": {
+    "palbox.pals": {
+      "object": "PalCharacterManager",
+      "path": "IndividualParameterMap (TMap<PalInstanceID, PalIndividualCharacterParameter*>)",
+      "filter": "SaveParameter.SlotId.ContainerId.ID == PalPlayerState.PalStorage.TargetContainer.ID.ID",
+      "per_pal": "SaveParameter : CharacterID (FName), Gender (1=male/2=female), Level, NickName, Talent_HP/Melee/Shot/Defense, PassiveSkillList (TArray<FName>), IsPlayer (exclusion)",
+      "instance_id": "clé de map PalInstanceID.InstanceId (Guid)",
+      "notes": "Réplication paresseuse : le jeu ne matérialise les paramètres d'une page de Palbox qu'à son premier affichage dans la session (ils persistent ensuite). owned_count (slots au ReplicateHandleID.InstanceId non nul) donne le vrai total ; status=degraded tant que synced < owned. Fallback client distant : SlotArray[].ReplicateIndividualParameter."
+    },
+    "party.container": {
+      "object": "PalPlayerController",
+      "path": "conteneur PalIndividualCharacterContainer à 5 slots (repéré, collecteur à venir)"
+    }
+  },
   "discovery_leads": {
     "PalTimeManager": "délégués OnNightStart/OnNightEnd/OnChangeHours — candidats pour les événements jour/nuit (alertes)",
     "PalPlayerState": "présent dans PersistentLevel — candidat pour niveau/HP joueur (Phase 1)"

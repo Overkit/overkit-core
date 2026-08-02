@@ -233,9 +233,17 @@ public sealed class HudWindow : Form
             lines.Add($"jour {time.Day} — {time.Hour:00}:{time.Minute:00}");
         }
 
-        if (snapshot.Palbox is { Status: FieldStatus.Ok, Pals: not null } palbox)
+        if (snapshot.Palbox is { Pals: not null } palbox &&
+            palbox.Status is FieldStatus.Ok or FieldStatus.Degraded)
         {
-            lines.Add($"palbox : {palbox.Pals.Count} Pals");
+            if (palbox.Status == FieldStatus.Degraded && palbox.Owned_count is > 0)
+            {
+                lines.Add($"palbox : {palbox.Pals.Count}/{palbox.Owned_count} Pals — ouvrir la boîte pour synchroniser");
+            }
+            else
+            {
+                lines.Add($"palbox : {palbox.Pals.Count} Pals");
+            }
         }
 
         if (snapshot.Player is { Status: FieldStatus.Ok, Position: not null } player)

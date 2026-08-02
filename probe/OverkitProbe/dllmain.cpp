@@ -17,6 +17,10 @@
 
 using namespace RC;
 
+// Version de la Sonde — source unique, reprise par ModVersion, le log et le
+// handshake. Règle : mineure = fonctionnalité, patch = modification.
+#define OVERKIT_PROBE_VERSION "0.3.0"
+
 namespace
 {
     constexpr std::uint16_t ProbePort = 47800;
@@ -42,11 +46,11 @@ public:
     OverkitProbe() : CppUserModBase()
     {
         ModName = STR("OverkitProbe");
-        ModVersion = STR("0.1.0");
+        ModVersion = L"" OVERKIT_PROBE_VERSION;
         ModDescription = STR("Sonde Overkit - lecture seule de l'etat du jeu");
         ModAuthors = STR("Nallraen");
 
-        Output::send<LogLevel::Verbose>(STR("[OverkitProbe] Construit (v0.1.0)\n"));
+        Output::send<LogLevel::Verbose>(STR("[OverkitProbe] Construit (v{})\n"), L"" OVERKIT_PROBE_VERSION);
     }
 
     ~OverkitProbe() override
@@ -60,7 +64,7 @@ public:
 
         // EXG-004 : annonce des versions au premier contact.
         const std::string handshake =
-            R"({"type":"handshake","probe_version":"0.1.0","schema_version":"0.1-spike",)"
+            R"({"type":"handshake","probe_version":")" OVERKIT_PROBE_VERSION R"(","schema_version":"0.1-spike",)"
             R"("game_build":"unknown","mapping_version":"none"})";
 
         m_server.start(ProbePort, handshake, [](const std::string& message) {

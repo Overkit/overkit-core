@@ -330,7 +330,7 @@ namespace Overkit.Contracts
     }
 
     /// <summary>
-    /// Tous les Pals possédés (§3.1). Event-driven + resync 30 s. Mapping à découvrir — domaine le plus riche, socle des modules Accouplement inversé et Audit de base.
+    /// Tous les Pals possédés (§3.1). Resync 30 s. Mapping validé (2026-08-02) : PalCharacterManager.IndividualParameterMap filtré par SaveParameter.SlotId.ContainerId == PalPlayerState.PalStorage.TargetContainer.ID ; repli sur les slots répliqués côté client distant.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "11.6.1.0 (Newtonsoft.Json v13.0.0.0)")]
     public partial class Palbox
@@ -339,6 +339,12 @@ namespace Overkit.Contracts
         [System.Text.Json.Serialization.JsonPropertyName("status")]
         [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<FieldStatus>))]
         public FieldStatus Status { get; set; } = default!;
+
+        /// <summary>
+        /// Nombre de slots occupés de la Palbox (fiable même sans synchro complète). status=degraded quand pals contient moins d'entrées que owned_count : le jeu ne matérialise les paramètres d'une page qu'à son premier affichage dans la session.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("owned_count")]
+        public int? Owned_count { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("pals")]
         public System.Collections.Generic.ICollection<Pal>? Pals { get; set; } = default!;

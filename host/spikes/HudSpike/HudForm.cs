@@ -122,7 +122,8 @@ public sealed class HudForm : Form
     {
         _tick++;
         var mode = _panelOpen ? "PANNEAU (interactif)" : "HUD (click-through)";
-        var (connection, playerStatus, x, y, z, probeVersion) = _probe.Read();
+        var (connection, playerStatus, x, y, z, probeVersion, timeStatus, day, hour, minute) = _probe.Read();
+        var gameTime = timeStatus == "ok" ? $"jour {day} — {hour:00}:{minute:00}" : $"({timeStatus})";
         // Calibration affine monde -> carte in-game (2 points, 02/08/2026,
         // axes croisés UE). Sera généralisée dans map_calibration.json (§4.2).
         var mapX = y * 0.0021847 - 345.95;
@@ -134,6 +135,7 @@ public sealed class HudForm : Form
             $"Overkit HUD — spike Phase 0\n" +
             $"{DateTime.Now:HH:mm:ss}  tick {_tick}\n" +
             $"sonde : {connection} (v{probeVersion})\n" +
+            $"heure in-game : {gameTime}\n" +
             $"position : {position}\n" +
             $"mode : {mode}\n" +
             $"F6 : ouvrir/fermer le panneau";

@@ -20,17 +20,20 @@ public sealed class ProbeClient : IDisposable
     private string _playerStatus = "-";
     private double _x, _y, _z;
     private string _probeVersion = "?";
+    private string _timeStatus = "-";
+    private long _day, _hour, _minute;
 
     public ProbeClient()
     {
         _ = Task.Run(RunAsync);
     }
 
-    public (string Connection, string PlayerStatus, double X, double Y, double Z, string ProbeVersion) Read()
+    public (string Connection, string PlayerStatus, double X, double Y, double Z, string ProbeVersion,
+            string TimeStatus, long Day, long Hour, long Minute) Read()
     {
         lock (_lock)
         {
-            return (_connection, _playerStatus, _x, _y, _z, _probeVersion);
+            return (_connection, _playerStatus, _x, _y, _z, _probeVersion, _timeStatus, _day, _hour, _minute);
         }
     }
 
@@ -108,6 +111,8 @@ public sealed class ProbeClient : IDisposable
             {
                 var player = root.GetProperty("player");
                 var status = player.GetProperty("status").GetString() ?? "-";
+                var time = root.GetProperty("world").GetProperty("time");
+                var timeStatus = time.GetProperty("status").GetString() ?? "-";
                 lock (_lock)
                 {
                     _playerStatus = status;
@@ -116,6 +121,13 @@ public sealed class ProbeClient : IDisposable
                         _x = player.GetProperty("x").GetDouble();
                         _y = player.GetProperty("y").GetDouble();
                         _z = player.GetProperty("z").GetDouble();
+                    }
+                    _timeStatus = timeStatus;
+                    if (timeStatus == "ok")
+                    {
+                        _day = time.GetProperty("day").GetInt64();
+                        _hour = time.GetProperty("hour").GetInt64();
+                        _minute = time.GetProperty("minute").GetInt64();
                     }
                 }
             }

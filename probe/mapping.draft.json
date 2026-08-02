@@ -1,0 +1,24 @@
+{
+  "$comment": "Brouillon du mapping.json de la Sonde (§2.1) : chemins de réflexion découverts et validés in-game le 2026-08-02, build Game Pass 1.10.1103.0. Deviendra le mapping.json versionné livré avec le dataset (résolution par nom, jamais d'offset).",
+  "schema_version": "0.1-draft",
+  "game_build": "1.10.1103.0",
+  "fields": {
+    "player.position": {
+      "object": "PalPlayerCharacter",
+      "path": "RootComponent.RelativeLocation",
+      "type": "FVector (3 doubles)",
+      "notes": "Lecture de propriétés pure. FindFirstOf suffit en solo ; en multi, filtrer le pawn possédé localement (Phase 1)."
+    },
+    "world.time": {
+      "object": "PalGameStateInGame",
+      "path": "WorldTime.Ticks",
+      "type": "struct GameDateTime { int64 Ticks } — unités de 100 ns",
+      "derivation": "total_s = Ticks/1e7 ; jour = total_s/86400 ; heure = (total_s%86400)/3600 ; minute = (total_s%3600)/60",
+      "notes": "Répliqué (fonctionne en multijoueur). Validé : ticks 186277070000000 = jour 215, 14h21, cohérent avec l'écran."
+    }
+  },
+  "discovery_leads": {
+    "PalTimeManager": "délégués OnNightStart/OnNightEnd/OnChangeHours — candidats pour les événements jour/nuit (alertes)",
+    "PalPlayerState": "présent dans PersistentLevel — candidat pour niveau/HP joueur (Phase 1)"
+  }
+}

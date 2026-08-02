@@ -17,6 +17,7 @@ public sealed class HudForm : Form
     private readonly System.Windows.Forms.Timer _dataTimer;
     private readonly System.Windows.Forms.Timer _topmostTimer;
 
+    private readonly ProbeClient _probe = new();
     private bool _panelOpen;
     private IntPtr _previousForeground = IntPtr.Zero;
     private long _tick;
@@ -81,6 +82,7 @@ public sealed class HudForm : Form
     protected override void OnHandleDestroyed(EventArgs e)
     {
         UnregisterHotKey(Handle, HotkeyId);
+        _probe.Dispose();
         base.OnHandleDestroyed(e);
     }
 
@@ -120,9 +122,19 @@ public sealed class HudForm : Form
     {
         _tick++;
         var mode = _panelOpen ? "PANNEAU (interactif)" : "HUD (click-through)";
+        var (connection, playerStatus, x, y, z, probeVersion) = _probe.Read();
+        // Calibration affine monde -> carte in-game (2 points, 02/08/2026,
+        // axes croisés UE). Sera généralisée dans map_calibration.json (§4.2).
+        var mapX = y * 0.0021847 - 345.95;
+        var mapY = x * 0.0021673 + 265.95;
+        var position = playerStatus == "ok"
+            ? $"X={x:N0}  Y={y:N0}  Z={z:N0}\ncarte : ({mapX:F0}, {mapY:F0})"
+            : $"({playerStatus})";
         _hudLabel.Text =
             $"Overkit HUD — spike Phase 0\n" +
             $"{DateTime.Now:HH:mm:ss}  tick {_tick}\n" +
+            $"sonde : {connection} (v{probeVersion})\n" +
+            $"position : {position}\n" +
             $"mode : {mode}\n" +
             $"F6 : ouvrir/fermer le panneau";
     }

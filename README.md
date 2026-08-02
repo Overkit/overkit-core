@@ -33,11 +33,14 @@ overkit/
 
 ## État d'avancement
 
-**Phase 0 — Spike de faisabilité** (en cours)
+**Phase 0 — Spike de faisabilité** (quasi bouclée)
 
 - [x] Spike HUD : fenêtre click-through + hotkey panneau (`host/spikes/HudSpike`) — validé le 01/08/2026
-- [ ] Spike Sonde : position joueur + heure in-game → WebSocket local
-- [ ] Mesure frametime avec/sans overlay
+- [x] Spike Sonde : position joueur par réflexion → WebSocket local (127.0.0.1:47800), consommé en live par le HUD — validé le 02/08/2026 (version Game Pass/WinGDK)
+- [x] Calibration carte : transformation affine monde→carte résolue sur 2 points, validée exacte sur un 3e (`dataset/map_calibration.draft.json`)
+- [x] Mesure frametime avec/sans overlay : aucun impact mesurable (~700 FPS constants, compteur NVIDIA). Mesure fine P95/P99 à refaire en Phase 1 (PresentMon 2.5.1 erratique sur Windows 11 26200)
+- [ ] Heure in-game : classe source identifiée (`BP_PalTimeManager_C`), mapping des propriétés à faire
+- [ ] Vidéo de 30 s du critère de sortie (position live dans l'overlay, bascule F6)
 
 ## Licences
 

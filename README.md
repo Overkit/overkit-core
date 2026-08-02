@@ -36,7 +36,7 @@ overkit/
 **Phase 1 — Noyau** (en cours depuis le 02/08/2026)
 
 - [x] Schéma State Bus v1 (JSON Schema → génération types C#, EXG-020)
-- [x] Sonde (v0.5.0) : collecteurs `player.position`, `world.time`, `palbox` (boîte + équipe + travailleurs), `party`, `bases` (jauges faim/santé mentale), `inventory` (sac, objets clés, nourriture, coffres de guilde), `nearby` (2 Hz) — restent `mapping.json` externalisé et statuts de collecteurs
+- [x] Sonde (v0.6.0) : les 8 domaines du State Bus collectés (`player`, `world`, `palbox`, `party`, `bases`, `inventory`, `nearby`, `collectors`), `mapping.json` externalisé rechargeable à chaud (EXG-003 démontrée : sabotage/réparation en live sans recompilation)
 - [x] **Critère de sortie atteint** : la Palbox s'affiche dans le panneau en live (WinUI 3, recherche/tri, noms localisés via le dataset, équipe marquée ★, curseur libéré)
 - [~] Dataset : Dumper v0.1.0 ✓ (générique, piloté à chaud), builder ✓ (`pals.json` 753 espèces nommées + CombiRank, `passives.json` 419, `breeding.json` 258 combos) — restent spawners, recettes, drops, calibration formalisée, publication en release
 - [x] Host : State Bus, connexion Sonde typée + reconnexion, mode statique, HUD compact lié au jeu, panneau WinUI 3, refdata, calibration, settings, hotkey, tray

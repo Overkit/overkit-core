@@ -67,7 +67,7 @@ namespace Overkit.Contracts
         /// Horloge monotone de la Sonde en millisecondes (pas une heure calendaire)
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("t_ms")]
-        public int T_ms { get; set; } = default!;
+        public long T_ms { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("player")]
         public Player? Player { get; set; } = default!;
@@ -217,7 +217,7 @@ namespace Overkit.Contracts
         /// GameDateTime.Ticks, unités de 100 ns (mapping validé : PalGameStateInGame.WorldTime)
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("ticks")]
-        public int? Ticks { get; set; } = default!;
+        public long? Ticks { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("day")]
         public int? Day { get; set; } = default!;

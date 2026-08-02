@@ -33,7 +33,15 @@ overkit/
 
 ## État d'avancement
 
-**Phase 1 — Noyau** (en cours depuis le 02/08/2026)
+**Phase 2 — Modules fondateurs** (en cours depuis le 02/08/2026)
+
+- [x] Audit de base : alertes faim/santé mentale des travailleurs (validé sur données réelles)
+- [x] Checklist de craft : recette × quantité → manquants → espèces à farmer (drops)
+- [x] Accouplement inversé : CombiRank + combos uniques, paires réalisables avec la Palbox réelle (genres inclus)
+- [ ] Vue carte (image + marqueurs + position live) + Routing de farm minimal
+- Critère de sortie : les 3 modules utilisés en session réelle une semaine, sans alt-tab
+
+**Phase 1 — Noyau** (bouclée le 02/08/2026)
 
 - [x] Schéma State Bus v1 (JSON Schema → génération types C#, EXG-020)
 - [x] Sonde (v0.6.0) : les 8 domaines du State Bus collectés (`player`, `world`, `palbox`, `party`, `bases`, `inventory`, `nearby`, `collectors`), `mapping.json` externalisé rechargeable à chaud (EXG-003 démontrée : sabotage/réparation en live sans recompilation)

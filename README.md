@@ -1,4 +1,4 @@
-# Overkit — All-in-One Overlay for Palworld
+﻿# Overkit — All-in-One Overlay for Palworld
 
 Overlay tout-en-un affiché par-dessus Palworld (aucun alt-tab), alimenté en temps réel par l'état du jeu, extensible par des modules communautaires, 100 % gratuit et open source.
 
@@ -36,7 +36,7 @@ overkit/
 **Phase 1 — Noyau** (en cours depuis le 02/08/2026)
 
 - [ ] Schéma State Bus v1 (JSON Schema → génération types C#, EXG-020)
-- [~] Sonde (v0.4.0) : collecteurs `player.position` ✓, `world.time` ✓, `palbox` ✓ (52/52, équipe incluse, degraded honnête), `party` ✓ — restent `inventory`, `base`, `nearby`, `mapping.json` externalisé, statuts de collecteurs
+- [x] Sonde (v0.5.0) : collecteurs `player.position`, `world.time`, `palbox` (boîte + équipe + travailleurs), `party`, `bases` (jauges faim/santé mentale), `inventory` (sac, objets clés, nourriture, coffres de guilde), `nearby` (2 Hz) — restent `mapping.json` externalisé et statuts de collecteurs
 - [x] **Critère de sortie atteint** : la Palbox s'affiche dans le panneau en live (WinUI 3, recherche/tri, noms localisés via le dataset, équipe marquée ★, curseur libéré)
 - [~] Dataset : Dumper v0.1.0 ✓ (générique, piloté à chaud), builder ✓ (`pals.json` 753 espèces nommées + CombiRank, `passives.json` 419, `breeding.json` 258 combos) — restent spawners, recettes, drops, calibration formalisée, publication en release
 - [~] Host : State Bus ✓, connexion Sonde typée + reconnexion ✓, mode statique ✓, HUD ✓, calibration depuis le dataset ✓, settings ✓, hotkey ✓ — reste : panneau WinUI 3, chargeur de dataset complet

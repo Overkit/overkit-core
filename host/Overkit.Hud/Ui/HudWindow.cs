@@ -230,7 +230,9 @@ public sealed class HudWindow : Form
                 {
                     _targetLogged = true;
                     File.AppendAllText(Path.Combine(AppContext.BaseDirectory, "overkit.log"),
-                        $"[{DateTime.Now:HH:mm:ss}] HUD : cible visible ({target.Name}){Environment.NewLine}");
+                        $"[{DateTime.Now:HH:mm:ss}] HUD : cible={target.Name} | player.status={snapshot.Player?.Status.ToString() ?? "null"} " +
+                        $"pos={(snapshot.Player?.Position is { } dp ? $"{dp.X:F0},{dp.Y:F0}" : "null")} " +
+                        $"calibration={(_calibration is null ? "null" : "ok")} | ligne=[{string.Join(" / ", info)}]{Environment.NewLine}");
                 }
             }
         }

@@ -12,6 +12,9 @@ public sealed record SpecialCombo(string ParentA, int GenderA, string ParentB, i
 
 public sealed record DropSource(string SpeciesId, double Rate, int Min, int Max);
 
+/// <summary>Emplacement de spawn d'une espèce (coordonnées monde, cm). OnlyTime : 0 = toujours, 1 = jour, 2 = nuit.</summary>
+public sealed record SpawnSpot(double X, double Y, double Z, double Radius, int OnlyTime, int LevelMin, int LevelMax);
+
 /// <summary>
 /// Données de référence du dataset (§2.4) : noms localisés, espèces (CombiRank,
 /// Zukan), recettes, sources de butin, combos d'accouplement. Chargées depuis
@@ -26,6 +29,10 @@ public sealed class RefData
     private readonly Dictionary<string, List<DropSource>> _dropSources = new(StringComparer.OrdinalIgnoreCase);
     private readonly List<RecipeInfo> _recipes = [];
     private readonly List<SpecialCombo> _specialCombos = [];
+    private readonly Dictionary<string, List<SpawnSpot>> _spawnSpots = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>Bornes monde (min/max X,Y) de tous les emplacements de spawn — pour cadrer la carte.</summary>
+    public (double MinX, double MaxX, double MinY, double MaxY) SpawnBounds { get; private set; }
 
     public int SpeciesCount => _speciesNames.Count;
     public IReadOnlyList<RecipeInfo> Recipes => _recipes;
@@ -47,6 +54,11 @@ public sealed class RefData
     public IReadOnlyList<DropSource> DropSourcesFor(string itemId) =>
         _dropSources.TryGetValue(itemId, out var list) ? list : [];
 
+    public IReadOnlyList<SpawnSpot> SpawnSpotsFor(string speciesId) =>
+        _spawnSpots.TryGetValue(speciesId, out var list) ? list : [];
+
+    public bool HasSpawnData => _spawnSpots.Count > 0;
+
     public static RefData Load(Action<string> log)
     {
         var refData = new RefData();
@@ -65,6 +77,7 @@ public sealed class RefData
             refData.LoadRecipes(Path.Combine(dir, "recipes.json"));
             refData.LoadDrops(Path.Combine(dir, "drops.json"));
             refData.LoadBreeding(Path.Combine(dir, "breeding.json"));
+            refData.LoadSpawners(Path.Combine(dir, "spawners.json"));
             log($"Dataset chargé ({dir}) : {refData._species.Count} espèces, {refData._itemNames.Count} objets, " +
                 $"{refData._recipes.Count} recettes, {refData._specialCombos.Count} combos");
         }
@@ -185,6 +198,76 @@ public sealed class RefData
                 combo.GetProperty("parent_b").GetString() ?? "",
                 combo.GetProperty("parent_gender_b").GetInt32(),
                 combo.GetProperty("child").GetString() ?? ""));
+        }
+    }
+
+    private void LoadSpawners(string path)
+    {
+        if (!File.Exists(path))
+        {
+            return;
+        }
+        using var doc = JsonDocument.Parse(File.ReadAllText(path));
+
+        // Emplacements indexés par nom de spawner.
+        var placementsByName = new Dictionary<string, List<(double X, double Y, double Z, double Radius)>>(StringComparer.OrdinalIgnoreCase);
+        double minX = double.MaxValue, maxX = double.MinValue, minY = double.MaxValue, maxY = double.MinValue;
+        foreach (var placement in doc.RootElement.GetProperty("placements").EnumerateArray())
+        {
+            var name = placement.GetProperty("spawner_name").GetString() ?? "";
+            if (name.Length == 0)
+            {
+                continue;
+            }
+            var x = placement.GetProperty("x").GetDouble();
+            var y = placement.GetProperty("y").GetDouble();
+            if (!placementsByName.TryGetValue(name, out var list))
+            {
+                list = [];
+                placementsByName[name] = list;
+            }
+            list.Add((x, y,
+                      placement.GetProperty("z").GetDouble(),
+                      placement.GetProperty("radius").GetDouble()));
+            minX = Math.Min(minX, x);
+            maxX = Math.Max(maxX, x);
+            minY = Math.Min(minY, y);
+            maxY = Math.Max(maxY, y);
+        }
+        if (minX < maxX)
+        {
+            SpawnBounds = (minX, maxX, minY, maxY);
+        }
+
+        // Groupes (loterie pondérée par spawner_name) -> spots par espèce.
+        foreach (var group in doc.RootElement.GetProperty("spawn_groups").EnumerateObject())
+        {
+            var value = group.Value;
+            var spawnerName = value.GetProperty("spawner_name").GetString() ?? "";
+            if (!placementsByName.TryGetValue(spawnerName, out var placements))
+            {
+                continue; // ~5 % de groupes sans emplacement connu
+            }
+            var onlyTime = value.TryGetProperty("only_time", out var t) ? t.GetInt32() : 0;
+            foreach (var pal in value.GetProperty("pals").EnumerateArray())
+            {
+                var speciesId = pal.GetProperty("species_id").GetString() ?? "";
+                if (speciesId.Length == 0)
+                {
+                    continue;
+                }
+                var levelMin = pal.GetProperty("level_min").GetInt32();
+                var levelMax = pal.GetProperty("level_max").GetInt32();
+                if (!_spawnSpots.TryGetValue(speciesId, out var spots))
+                {
+                    spots = [];
+                    _spawnSpots[speciesId] = spots;
+                }
+                foreach (var (x, y, z, radius) in placements)
+                {
+                    spots.Add(new SpawnSpot(x, y, z, radius, onlyTime, levelMin, levelMax));
+                }
+            }
         }
     }
 

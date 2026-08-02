@@ -35,6 +35,7 @@ public sealed partial class PanelWindow : Window
         Audit.Initialize(bus, refData);
         Craft.Initialize(bus, refData);
         Breeding.Initialize(bus, refData);
+        Map.Initialize(bus, refData);
     }
 
     private void Nav_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
@@ -44,5 +45,6 @@ public sealed partial class PanelWindow : Window
         Audit.Visibility = tag == "audit" ? Visibility.Visible : Visibility.Collapsed;
         Craft.Visibility = tag == "craft" ? Visibility.Visible : Visibility.Collapsed;
         Breeding.Visibility = tag == "breeding" ? Visibility.Visible : Visibility.Collapsed;
+        Map.Visibility = tag == "map" ? Visibility.Visible : Visibility.Collapsed;
     }
 }

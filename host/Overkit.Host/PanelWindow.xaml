@@ -27,6 +27,7 @@
                 <NavigationViewItem Content="Audit de base" Tag="audit" />
                 <NavigationViewItem Content="Checklist de craft" Tag="craft" />
                 <NavigationViewItem Content="Accouplement" Tag="breeding" />
+                <NavigationViewItem Content="Carte" Tag="map" />
             </NavigationView.MenuItems>
         </NavigationView>
 
@@ -35,6 +36,7 @@
             <views:AuditView x:Name="Audit" Visibility="Collapsed" />
             <views:CraftView x:Name="Craft" Visibility="Collapsed" />
             <views:BreedingView x:Name="Breeding" Visibility="Collapsed" />
+            <views:MapView x:Name="Map" Visibility="Collapsed" />
         </Grid>
     </Grid>
 </Window>

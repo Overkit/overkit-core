@@ -39,7 +39,7 @@ overkit/
 - [x] Spike Sonde : position joueur par réflexion → WebSocket local (127.0.0.1:47800), consommé en live par le HUD — validé le 02/08/2026 (version Game Pass/WinGDK)
 - [x] Calibration carte : transformation affine monde→carte résolue sur 2 points, validée exacte sur un 3e (`dataset/map_calibration.draft.json`)
 - [x] Mesure frametime avec/sans overlay : aucun impact mesurable (~700 FPS constants, compteur NVIDIA). Mesure fine P95/P99 à refaire en Phase 1 (PresentMon 2.5.1 erratique sur Windows 11 26200)
-- [ ] Heure in-game : classe source identifiée (`BP_PalTimeManager_C`), mapping des propriétés à faire
+- [x] Heure in-game : `PalGameStateInGame.WorldTime.Ticks` (struct GameDateTime, répliquée) publiée à 1 Hz, affichée dans le HUD (`probe/mapping.draft.json`) — validé le 02/08/2026
 - [ ] Vidéo de 30 s du critère de sortie (position live dans l'overlay, bascule F6)
 
 ## Licences

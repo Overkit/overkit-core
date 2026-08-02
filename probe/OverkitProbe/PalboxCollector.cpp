@@ -1,7 +1,9 @@
 #include "PalboxCollector.hpp"
+#include "WorldCollectors.hpp"
 
 #include <chrono>
 #include <format>
+#include <vector>
 
 #include <Unreal/UObjectGlobals.hpp>
 #include <Unreal/UObject.hpp>
@@ -266,7 +268,7 @@ namespace
 
     // Voie principale : IndividualParameterMap du PalCharacterManager (source
     // serveur complète, indépendante de la réplication paresseuse des slots).
-    auto collect_from_manager(const Guid128& box_guid, const Guid128& party_guid, std::string& pals) -> bool
+    auto collect_from_manager(const std::vector<Guid128>& targets, std::string& pals) -> bool
     {
         auto* manager = Unreal::UObjectGlobals::FindFirstOf(STR("PalCharacterManager"));
         if (!manager)
@@ -292,9 +294,20 @@ namespace
             }
             void* pair = map->GetData(i, layout);
             auto* parameter = *value_prop->ContainerPtrToValuePtr<Unreal::UObject*>(pair);
-            if (!parameter ||
-                (!save_belongs_to(parameter, box_guid) &&
-                 (party_guid.is_zero() || !save_belongs_to(parameter, party_guid))))
+            if (!parameter)
+            {
+                continue;
+            }
+            bool matched = false;
+            for (const auto& target : targets)
+            {
+                if (save_belongs_to(parameter, target))
+                {
+                    matched = true;
+                    break;
+                }
+            }
+            if (!matched)
             {
                 continue;
             }
@@ -400,7 +413,6 @@ namespace Overkit
 
             auto* party_container = find_party_container();
             const auto box_guid = read_container_guid(container);
-            const auto party_guid = party_container ? read_container_guid(party_container) : Guid128{};
 
             if (party_container)
             {
@@ -408,15 +420,26 @@ namespace Overkit
                                          container_member_ids(party_container));
             }
 
+            // Cibles : boîte + équipe + travailleurs de toutes les bases —
+            // « tous les Pals possédés » (§3.1).
+            std::vector<Guid128> targets{box_guid};
             auto owned = count_occupied_slots(container);
-            if (party_container && owned >= 0)
+            if (party_container)
             {
-                const auto party_count = count_occupied_slots(party_container);
-                owned += party_count > 0 ? party_count : 0;
+                targets.push_back(read_container_guid(party_container));
+                const auto count = count_occupied_slots(party_container);
+                owned += count > 0 ? count : 0;
+            }
+            const auto worker_containers = WorldCollectors::base_worker_containers();
+            for (auto* worker_container : worker_containers)
+            {
+                targets.push_back(read_container_guid(worker_container));
+                const auto count = count_occupied_slots(worker_container);
+                owned += count > 0 ? count : 0;
             }
             std::string pals;
 
-            bool via_manager = !box_guid.is_zero() && collect_from_manager(box_guid, party_guid, pals);
+            bool via_manager = !box_guid.is_zero() && collect_from_manager(targets, pals);
             if (!via_manager)
             {
                 pals.clear();
@@ -424,6 +447,10 @@ namespace Overkit
                 if (party_container)
                 {
                     collect_from_slots(party_container, pals);
+                }
+                for (auto* worker_container : worker_containers)
+                {
+                    collect_from_slots(worker_container, pals);
                 }
             }
 

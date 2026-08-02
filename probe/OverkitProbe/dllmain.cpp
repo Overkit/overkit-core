@@ -11,6 +11,7 @@
 
 #include "Explorer.hpp"
 #include "PalboxCollector.hpp"
+#include "WorldCollectors.hpp"
 #include "WsServer.hpp"
 
 #include <string>
@@ -19,7 +20,7 @@ using namespace RC;
 
 // Version de la Sonde — source unique, reprise par ModVersion, le log et le
 // handshake. Règle : mineure = fonctionnalité, patch = modification.
-#define OVERKIT_PROBE_VERSION "0.4.0"
+#define OVERKIT_PROBE_VERSION "0.5.0"
 
 namespace
 {
@@ -168,8 +169,16 @@ public:
             std::snprintf(time_json, sizeof(time_json), R"({"status":"unavailable"})");
         }
 
-        // Palbox + équipe : resync 30 s, embarqués dans le même message que la
-        // position (le transport ne garde que le dernier état publié).
+        // Nearby : 2 Hz (§2.1), mis en cache entre deux rafraîchissements.
+        if (ok && now - m_last_nearby >= std::chrono::milliseconds(500))
+        {
+            m_last_nearby = now;
+            m_nearby_json = Overkit::WorldCollectors::collect_nearby_json({pos.X, pos.Y, pos.Z});
+        }
+
+        // Palbox + équipe + bases + inventaire : resync 30 s, embarqués dans
+        // le même message que la position (le transport ne garde que le
+        // dernier état publié).
         std::string palbox_json, party_json;
         const bool domains_due = m_palbox.collect_if_due(palbox_json, party_json);
 
@@ -182,6 +191,12 @@ public:
         {
             message += R"(,"palbox":)" + palbox_json;
             message += R"(,"party":)" + party_json;
+            message += R"(,"bases":)" + Overkit::WorldCollectors::collect_bases_json();
+            message += R"(,"inventory":)" + Overkit::WorldCollectors::collect_inventory_json();
+        }
+        if (!m_nearby_json.empty())
+        {
+            message += R"(,"nearby":)" + m_nearby_json;
         }
         message += '}';
         m_server.publish(std::move(message));
@@ -198,6 +213,8 @@ private:
     Overkit::WsServer m_server;
     std::chrono::steady_clock::time_point m_last_push{};
     std::chrono::steady_clock::time_point m_last_time_read{};
+    std::chrono::steady_clock::time_point m_last_nearby{};
+    std::string m_nearby_json;
     std::int64_t m_world_ticks{0};
     bool m_time_ok{false};
 };

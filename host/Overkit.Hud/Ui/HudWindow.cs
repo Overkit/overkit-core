@@ -25,6 +25,7 @@ public sealed class HudWindow : Form
 
     private uint _gamePid;
     private DateTime _lastGameScan = DateTime.MinValue;
+    private bool _targetLogged;
 
     public HudWindow(StateBus bus, MapCalibration? calibration, uint hotkeyVk, string[] gameProcessNames, Action togglePanel)
     {
@@ -193,7 +194,8 @@ public sealed class HudWindow : Form
         {
             info.Add($"J{time.Day}  {time.Hour:00}:{time.Minute:00}");
         }
-        if (snapshot.Player is { Status: FieldStatus.Ok, Position: not null } player && _calibration is not null)
+        if (snapshot.Player is { Position: not null } player &&
+            player.Status is FieldStatus.Ok or FieldStatus.Degraded && _calibration is not null)
         {
             var (mapX, mapY) = _calibration.WorldToMap(player.Position.X, player.Position.Y);
             info.Add($"({mapX:F0}, {mapY:F0})");
@@ -210,11 +212,32 @@ public sealed class HudWindow : Form
             info.Add($"équipe {party.Member_instance_ids.Count}");
         }
         // Cible de farm (module Routing) : distance recalculée en continu.
-        if (Overkit.Host.Modules.TargetService.Current is { } target &&
-            snapshot.Player is { Status: FieldStatus.Ok, Position: { } pp })
+        try
         {
-            var meters = Math.Sqrt(Math.Pow(target.X - pp.X, 2) + Math.Pow(target.Y - pp.Y, 2)) / 100.0;
-            info.Add($"🎯 {target.Name} {meters:N0} m");
+            if (Overkit.Host.Modules.TargetService.Current is { } target)
+            {
+                if (snapshot.Player is { Position: { } pp } tp &&
+                    tp.Status is FieldStatus.Ok or FieldStatus.Degraded)
+                {
+                    var meters = Math.Sqrt(Math.Pow(target.X - pp.X, 2) + Math.Pow(target.Y - pp.Y, 2)) / 100.0;
+                    info.Add($"» {target.Name}  {meters:N0} m");
+                }
+                else
+                {
+                    info.Add($"» {target.Name}");
+                }
+                if (!_targetLogged)
+                {
+                    _targetLogged = true;
+                    File.AppendAllText(Path.Combine(AppContext.BaseDirectory, "overkit.log"),
+                        $"[{DateTime.Now:HH:mm:ss}] HUD : cible visible ({target.Name}){Environment.NewLine}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            File.AppendAllText(Path.Combine(AppContext.BaseDirectory, "overkit.log"),
+                $"[{DateTime.Now:HH:mm:ss}] HUD : exception cible : {ex}{Environment.NewLine}");
         }
         if (info.Count > 0)
         {

@@ -22,7 +22,7 @@ using namespace RC;
 
 // Version de la Sonde — source unique, reprise par ModVersion, le log et le
 // handshake. Règle : mineure = fonctionnalité, patch = modification.
-#define OVERKIT_PROBE_VERSION "0.6.0"
+#define OVERKIT_PROBE_VERSION "0.6.1"
 
 namespace
 {
@@ -147,12 +147,23 @@ public:
                               now.time_since_epoch())
                               .count();
 
-        char player_json[192];
+        // Lissage : une lecture peut échouer une frame (streaming, recréation
+        // d'objets). On sert la dernière position connue pendant 5 s en
+        // `degraded` plutôt que de clignoter en `unavailable`.
         if (ok)
         {
+            m_last_pos = pos;
+            m_last_pos_time = now;
+        }
+        const bool stale_ok = !ok && m_last_pos_time.time_since_epoch().count() != 0 &&
+                              now - m_last_pos_time < std::chrono::seconds(5);
+        char player_json[192];
+        if (ok || stale_ok)
+        {
             std::snprintf(player_json, sizeof(player_json),
-                          R"({"status":"ok","x":%.1f,"y":%.1f,"z":%.1f})",
-                          pos.X, pos.Y, pos.Z);
+                          R"({"status":"%s","x":%.1f,"y":%.1f,"z":%.1f})",
+                          ok ? "ok" : "degraded",
+                          (ok ? pos : m_last_pos).X, (ok ? pos : m_last_pos).Y, (ok ? pos : m_last_pos).Z);
         }
         else
         {
@@ -243,6 +254,8 @@ private:
     std::chrono::steady_clock::time_point m_last_push{};
     std::chrono::steady_clock::time_point m_last_time_read{};
     std::chrono::steady_clock::time_point m_last_nearby{};
+    Vector3d m_last_pos{};
+    std::chrono::steady_clock::time_point m_last_pos_time{};
     std::string m_nearby_json;
     std::int64_t m_world_ticks{0};
     bool m_time_ok{false};

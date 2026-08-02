@@ -29,7 +29,8 @@ public static class RoutingModule
             ? hour >= 18 || hour < 5
             : null;
 
-        var (px, py) = snapshot.Player is { Status: FieldStatus.Ok, Position: { } p }
+        var (px, py) = snapshot.Player is { Position: { } p } player &&
+                       player.Status is FieldStatus.Ok or FieldStatus.Degraded
             ? (p.X, p.Y)
             : (double.NaN, double.NaN);
 

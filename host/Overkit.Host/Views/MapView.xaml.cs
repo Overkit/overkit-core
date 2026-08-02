@@ -175,7 +175,8 @@ public sealed partial class MapView : UserControl
 
     private void DrawPlayer(GameStateSnapshot snapshot)
     {
-        if (snapshot.Player is not { Status: FieldStatus.Ok, Position: { } position })
+        if (snapshot.Player is not { Position: { } position } player ||
+            player.Status is not (FieldStatus.Ok or FieldStatus.Degraded))
         {
             return;
         }

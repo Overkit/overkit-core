@@ -18,7 +18,14 @@ public sealed class ProbeConnection : IDisposable
     private readonly StateBus _bus;
     private readonly Action<string> _log;
     private readonly CancellationTokenSource _cts = new();
-    private readonly JsonSerializerOptions _json = new() { PropertyNameCaseInsensitive = true };
+    // Le convertisseur global d'enums couvre les valeurs de dictionnaires
+    // (ex. collectors : map nom -> FieldStatus), que les attributs générés
+    // par propriété ne couvrent pas.
+    private readonly JsonSerializerOptions _json = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() },
+    };
 
     public ProbeConnection(Uri uri, StateBus bus, Action<string> log)
     {

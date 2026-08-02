@@ -34,7 +34,38 @@ internal static class Program
         // connexion basculera en live dès que la Sonde répondra (EXG-011).
         using var probe = new ProbeConnection(new Uri(settings.ProbeUri), bus, Log);
 
-        Application.Run(new HudWindow(bus, calibration, settings.PanelHotkeyVk));
+        var hud = new HudWindow(bus, calibration, settings.PanelHotkeyVk, settings.GameProcessNames);
+        using var tray = new TrayIcon(
+            togglePanel: hud.TogglePanelExternal,
+            openSettings: () => OpenSettingsFile(settings, Log),
+            openLog: () => ShellOpen(logPath, Log),
+            quit: hud.Close);
+
+        Application.Run(hud);
         Log("--- Overkit Host arrêté ---");
+    }
+
+    /// <summary>Ouvre overkit.settings.json dans l'éditeur associé, en le créant avec les valeurs courantes s'il n'existe pas.</summary>
+    private static void OpenSettingsFile(Core.HostSettings settings, Action<string> log)
+    {
+        var path = Path.Combine(AppContext.BaseDirectory, "overkit.settings.json");
+        if (!File.Exists(path))
+        {
+            File.WriteAllText(path, System.Text.Json.JsonSerializer.Serialize(settings,
+                new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
+        }
+        ShellOpen(path, log);
+    }
+
+    private static void ShellOpen(string path, Action<string> log)
+    {
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(path) { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            log($"Ouverture de {path} impossible : {ex.Message}");
+        }
     }
 }

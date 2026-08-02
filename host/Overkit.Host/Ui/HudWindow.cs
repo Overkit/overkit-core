@@ -17,19 +17,24 @@ public sealed class HudWindow : Form
     private readonly StateBus _bus;
     private readonly MapCalibration? _calibration;
     private readonly uint _hotkeyVk;
+    private readonly string[] _gameProcessNames;
     private readonly Label _hudLabel;
     private readonly Panel _panel;
     private readonly System.Windows.Forms.Timer _renderTimer;
     private readonly System.Windows.Forms.Timer _topmostTimer;
+    private readonly System.Windows.Forms.Timer _visibilityTimer;
 
     private bool _panelOpen;
     private IntPtr _previousForeground = IntPtr.Zero;
+    private uint _gamePid;
+    private DateTime _lastGameScan = DateTime.MinValue;
 
-    public HudWindow(StateBus bus, MapCalibration? calibration, uint hotkeyVk)
+    public HudWindow(StateBus bus, MapCalibration? calibration, uint hotkeyVk, string[] gameProcessNames)
     {
         _bus = bus;
         _calibration = calibration;
         _hotkeyVk = hotkeyVk;
+        _gameProcessNames = gameProcessNames;
 
         FormBorderStyle = FormBorderStyle.None;
         StartPosition = FormStartPosition.Manual;
@@ -62,6 +67,78 @@ public sealed class HudWindow : Form
         _topmostTimer.Tick += (_, _) =>
             SetWindowPos(Handle, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
         _topmostTimer.Start();
+
+        // Le HUD ne vit qu'avec le jeu : caché si le jeu est fermé ou en
+        // arrière-plan (Alt-Tab), sauf panneau Overkit ouvert.
+        _visibilityTimer = new System.Windows.Forms.Timer { Interval = 300 };
+        _visibilityTimer.Tick += (_, _) => UpdateVisibility();
+        _visibilityTimer.Start();
+    }
+
+    private void UpdateVisibility()
+    {
+        var shouldShow = _panelOpen || IsGameForeground();
+        if (shouldShow == Visible)
+        {
+            return;
+        }
+        if (shouldShow)
+        {
+            Visible = true; // ShowWithoutActivation : n'arrache pas le focus au jeu
+        }
+        else
+        {
+            if (_panelOpen)
+            {
+                ClosePanel(restoreFocus: false);
+            }
+            Visible = false;
+        }
+    }
+
+    private bool IsGameForeground()
+    {
+        // Scan léger du process jeu toutes les 2 s ; entre deux scans, le PID
+        // mémorisé suffit pour tester la fenêtre au premier plan.
+        var now = DateTime.UtcNow;
+        if ((now - _lastGameScan).TotalSeconds >= 2)
+        {
+            _lastGameScan = now;
+            _gamePid = 0;
+            foreach (var name in _gameProcessNames)
+            {
+                var processes = System.Diagnostics.Process.GetProcessesByName(name);
+                foreach (var process in processes)
+                {
+                    if (_gamePid == 0)
+                    {
+                        _gamePid = (uint)process.Id;
+                    }
+                    process.Dispose();
+                }
+                if (_gamePid != 0)
+                {
+                    break;
+                }
+            }
+        }
+        if (_gamePid == 0)
+        {
+            return false;
+        }
+
+        GetWindowThreadProcessId(GetForegroundWindow(), out var foregroundPid);
+        if (foregroundPid == _gamePid)
+        {
+            return true;
+        }
+        // Le process du jeu a pu disparaître entre deux scans : re-vérifier au
+        // prochain tick plutôt que de garder un HUD orphelin.
+        if (foregroundPid != 0 && foregroundPid == (uint)Environment.ProcessId)
+        {
+            return true;
+        }
+        return false;
     }
 
     protected override CreateParams CreateParams
@@ -101,27 +178,42 @@ public sealed class HudWindow : Form
         base.WndProc(ref m);
     }
 
+    /// <summary>Bascule du panneau depuis l'extérieur (icône de zone de notification).</summary>
+    public void TogglePanelExternal() => TogglePanel();
+
     private void TogglePanel()
     {
-        _panelOpen = !_panelOpen;
-        var exStyle = GetWindowLong(Handle, GWL_EXSTYLE);
-
         if (_panelOpen)
         {
-            _previousForeground = GetForegroundWindow();
-            SetWindowLong(Handle, GWL_EXSTYLE, exStyle & ~(WS_EX_TRANSPARENT | WS_EX_NOACTIVATE));
-            _panel.Visible = true;
-            SetForegroundWindow(Handle);
-            Activate();
+            ClosePanel(restoreFocus: true);
         }
         else
         {
-            _panel.Visible = false;
-            SetWindowLong(Handle, GWL_EXSTYLE, exStyle | WS_EX_TRANSPARENT | WS_EX_NOACTIVATE);
-            if (_previousForeground != IntPtr.Zero)
-            {
-                SetForegroundWindow(_previousForeground);
-            }
+            OpenPanel();
+        }
+    }
+
+    private void OpenPanel()
+    {
+        _panelOpen = true;
+        _previousForeground = GetForegroundWindow();
+        var exStyle = GetWindowLong(Handle, GWL_EXSTYLE);
+        SetWindowLong(Handle, GWL_EXSTYLE, exStyle & ~(WS_EX_TRANSPARENT | WS_EX_NOACTIVATE));
+        _panel.Visible = true;
+        Visible = true;
+        SetForegroundWindow(Handle);
+        Activate();
+    }
+
+    private void ClosePanel(bool restoreFocus)
+    {
+        _panelOpen = false;
+        _panel.Visible = false;
+        var exStyle = GetWindowLong(Handle, GWL_EXSTYLE);
+        SetWindowLong(Handle, GWL_EXSTYLE, exStyle | WS_EX_TRANSPARENT | WS_EX_NOACTIVATE);
+        if (restoreFocus && _previousForeground != IntPtr.Zero)
+        {
+            SetForegroundWindow(_previousForeground);
         }
     }
 

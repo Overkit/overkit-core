@@ -25,7 +25,6 @@ public sealed class HudWindow : Form
 
     private uint _gamePid;
     private DateTime _lastGameScan = DateTime.MinValue;
-    private bool _targetLogged;
 
     public HudWindow(StateBus bus, MapCalibration? calibration, uint hotkeyVk, string[] gameProcessNames, Action togglePanel)
     {
@@ -225,14 +224,6 @@ public sealed class HudWindow : Form
                 else
                 {
                     info.Add($"» {target.Name}");
-                }
-                if (!_targetLogged)
-                {
-                    _targetLogged = true;
-                    File.AppendAllText(Path.Combine(AppContext.BaseDirectory, "overkit.log"),
-                        $"[{DateTime.Now:HH:mm:ss}] HUD : cible={target.Name} | player.status={snapshot.Player?.Status.ToString() ?? "null"} " +
-                        $"pos={(snapshot.Player?.Position is { } dp ? $"{dp.X:F0},{dp.Y:F0}" : "null")} " +
-                        $"calibration={(_calibration is null ? "null" : "ok")} | ligne=[{string.Join(" / ", info)}]{Environment.NewLine}");
                 }
             }
         }

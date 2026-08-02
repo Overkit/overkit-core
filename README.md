@@ -35,13 +35,12 @@ overkit/
 
 **Phase 1 — Noyau** (en cours depuis le 02/08/2026)
 
-- [ ] Schéma State Bus v1 (JSON Schema → génération types C#, EXG-020)
+- [x] Schéma State Bus v1 (JSON Schema → génération types C#, EXG-020)
 - [x] Sonde (v0.5.0) : collecteurs `player.position`, `world.time`, `palbox` (boîte + équipe + travailleurs), `party`, `bases` (jauges faim/santé mentale), `inventory` (sac, objets clés, nourriture, coffres de guilde), `nearby` (2 Hz) — restent `mapping.json` externalisé et statuts de collecteurs
 - [x] **Critère de sortie atteint** : la Palbox s'affiche dans le panneau en live (WinUI 3, recherche/tri, noms localisés via le dataset, équipe marquée ★, curseur libéré)
 - [~] Dataset : Dumper v0.1.0 ✓ (générique, piloté à chaud), builder ✓ (`pals.json` 753 espèces nommées + CombiRank, `passives.json` 419, `breeding.json` 258 combos) — restent spawners, recettes, drops, calibration formalisée, publication en release
-- [~] Host : State Bus ✓, connexion Sonde typée + reconnexion ✓, mode statique ✓, HUD ✓, calibration depuis le dataset ✓, settings ✓, hotkey ✓ — reste : panneau WinUI 3, chargeur de dataset complet
-- [ ] Dumper v1 + premier dataset publié
-- Critère de sortie : EXG-003, 010, 011, 013, 030 verts ; la Palbox du joueur s'affiche dans le panneau en live
+- [x] Host : State Bus, connexion Sonde typée + reconnexion, mode statique, HUD compact lié au jeu, panneau WinUI 3, refdata, calibration, settings, hotkey, tray
+- Critère de sortie : EXG-003, 010, 011 verts ; EXG-013 validé au niveau spike (mesure fine P95/P99 à refaire) ; EXG-030 démontré (pipeline en minutes) ; la Palbox s'affiche dans le panneau en live ✓
 
 **Phase 0 — Spike de faisabilité** (bouclée le 02/08/2026)
 

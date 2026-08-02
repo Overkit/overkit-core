@@ -45,13 +45,14 @@ public partial class App : Application
         Log("--- Overkit Host démarre ---");
         var settings = HostSettings.Load(Log);
         var calibration = MapCalibration.TryLoad(Log);
+        var refData = RefData.Load(Log);
         _bus = new StateBus();
 
         // EXG-010 : démarrage sans Sonde = mode statique d'office ; bascule
         // live automatique dès que la Sonde répond (EXG-011).
         _probe = new ProbeConnection(new Uri(settings.ProbeUri), _bus, Log);
 
-        _panel = new PanelWindow(_bus);
+        _panel = new PanelWindow(_bus, refData);
 
         var hudThread = new Thread(() =>
         {

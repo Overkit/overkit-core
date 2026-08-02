@@ -1,4 +1,8 @@
 <Solution>
+  <Folder Name="/dataset/" />
+  <Folder Name="/dataset/builder/">
+    <Project Path="dataset/builder/Overkit.DatasetBuilder.csproj" />
+  </Folder>
   <Folder Name="/host/">
     <Project Path="host/Overkit.Contracts/Overkit.Contracts.csproj" />
     <Project Path="host/Overkit.Core/Overkit.Core.csproj" />

@@ -35,14 +35,16 @@ public sealed class PalRow
 public sealed partial class PanelWindow : Window
 {
     private readonly StateBus _bus;
+    private readonly RefData _refData;
     private object? _lastPalbox;
     private List<PalRow> _all = [];
 
     public ObservableCollection<PalRow> Pals { get; } = [];
 
-    public PanelWindow(StateBus bus)
+    public PanelWindow(StateBus bus, RefData refData)
     {
         _bus = bus;
+        _refData = refData;
         InitializeComponent();
 
         ExtendsContentIntoTitleBar = true;
@@ -124,12 +126,12 @@ public sealed partial class PanelWindow : Window
         }
     }
 
-    private static PalRow ToRow(Pal pal)
+    private PalRow ToRow(Pal pal)
     {
-        var species = PrettifySpecies(pal.Species_id);
+        var species = _refData.SpeciesName(pal.Species_id);
         var nickname = string.IsNullOrWhiteSpace(pal.Nickname) ? null : pal.Nickname;
         var passives = pal.Passives is { Count: > 0 } list
-            ? string.Join("  ·  ", list.Select(PrettifySpecies))
+            ? string.Join("  ·  ", list.Select(_refData.PassiveName))
             : "—";
         var talents = pal.Talents;
         var ivTotal = (talents?.Hp ?? 0) + (talents?.Melee ?? 0) + (talents?.Shot ?? 0) + (talents?.Defense ?? 0);

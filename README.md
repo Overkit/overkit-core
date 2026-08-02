@@ -33,14 +33,22 @@ overkit/
 
 ## État d'avancement
 
-**Phase 0 — Spike de faisabilité** (quasi bouclée)
+**Phase 1 — Noyau** (en cours depuis le 02/08/2026)
+
+- [ ] Schéma State Bus v1 (JSON Schema → génération types C#, EXG-020)
+- [ ] Sonde : collecteurs `player`, `world`, `palbox`, `inventory`, `base`, `nearby` + `mapping.json` + statuts
+- [ ] Host : State Bus, reconnexion, mode statique, chargeur de dataset, HUD + panneau, settings, hotkeys
+- [ ] Dumper v1 + premier dataset publié
+- Critère de sortie : EXG-003, 010, 011, 013, 030 verts ; la Palbox du joueur s'affiche dans le panneau en live
+
+**Phase 0 — Spike de faisabilité** (bouclée le 02/08/2026)
 
 - [x] Spike HUD : fenêtre click-through + hotkey panneau (`host/spikes/HudSpike`) — validé le 01/08/2026
 - [x] Spike Sonde : position joueur par réflexion → WebSocket local (127.0.0.1:47800), consommé en live par le HUD — validé le 02/08/2026 (version Game Pass/WinGDK)
 - [x] Calibration carte : transformation affine monde→carte résolue sur 2 points, validée exacte sur un 3e (`dataset/map_calibration.draft.json`)
 - [x] Mesure frametime avec/sans overlay : aucun impact mesurable (~700 FPS constants, compteur NVIDIA). Mesure fine P95/P99 à refaire en Phase 1 (PresentMon 2.5.1 erratique sur Windows 11 26200)
 - [x] Heure in-game : `PalGameStateInGame.WorldTime.Ticks` (struct GameDateTime, répliquée) publiée à 1 Hz, affichée dans le HUD (`probe/mapping.draft.json`) — validé le 02/08/2026
-- [ ] Vidéo de 30 s du critère de sortie (position live dans l'overlay, bascule F6)
+- [~] Vidéo de démo : reportée volontairement — elle sera tournée sur une base complète et présentable aux utilisateurs finaux
 
 ## Licences
 

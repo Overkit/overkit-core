@@ -51,4 +51,7 @@ public static class NativeMethods
     /// <summary>ClipCursor(IntPtr.Zero) libère le curseur d'un éventuel confinement posé par le jeu.</summary>
     [DllImport("user32.dll")]
     public static extern bool ClipCursor(IntPtr lpRect);
+
+    [DllImport("user32.dll")]
+    public static extern bool SetCursorPos(int x, int y);
 }

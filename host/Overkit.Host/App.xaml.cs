@@ -14,6 +14,7 @@ namespace Overkit.Host;
 public partial class App : Application
 {
     private DispatcherQueue _dispatcher = null!;
+    private DispatcherQueueTimer? _unclipTimer;
     private StateBus _bus = null!;
     private ProbeConnection? _probe;
     private PanelWindow? _panel;
@@ -96,6 +97,7 @@ public partial class App : Application
             }
             if (_panel.AppWindow.IsVisible)
             {
+                _unclipTimer?.Stop();
                 _panel.AppWindow.Hide();
                 if (_previousForeground != IntPtr.Zero)
                 {
@@ -107,9 +109,23 @@ public partial class App : Application
                 _previousForeground = NativeMethods.GetForegroundWindow();
                 _panel.AppWindow.Show();
                 _panel.Activate();
-                // §2.2 : à l'ouverture, le panneau libère le curseur que le
-                // jeu confine en borderless.
+
+                // §2.2 : le panneau libère le curseur. Le jeu re-confine en
+                // continu (ClipCursor par frame), donc on libère en boucle
+                // tant que le panneau est ouvert, et on amène le curseur
+                // dessus pour qu'il redevienne visible immédiatement.
                 NativeMethods.ClipCursor(IntPtr.Zero);
+                var position = _panel.AppWindow.Position;
+                var size = _panel.AppWindow.Size;
+                NativeMethods.SetCursorPos(position.X + size.Width / 2, position.Y + size.Height / 2);
+
+                if (_unclipTimer is null)
+                {
+                    _unclipTimer = _dispatcher.CreateTimer();
+                    _unclipTimer.Interval = TimeSpan.FromMilliseconds(150);
+                    _unclipTimer.Tick += (_, _) => NativeMethods.ClipCursor(IntPtr.Zero);
+                }
+                _unclipTimer.Start();
             }
         });
     }

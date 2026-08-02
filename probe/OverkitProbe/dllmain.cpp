@@ -10,7 +10,10 @@
 #include <Unreal/CoreUObject/UObject/UnrealType.hpp>
 
 #include "Explorer.hpp"
+#include "PalboxCollector.hpp"
 #include "WsServer.hpp"
+
+#include <string>
 
 using namespace RC;
 
@@ -161,11 +164,21 @@ public:
             std::snprintf(time_json, sizeof(time_json), R"({"status":"unavailable"})");
         }
 
+        // Palbox : resync 30 s, embarqué dans le même message que la position
+        // (le transport ne garde que le dernier état publié).
+        const auto palbox_json = m_palbox.collect_if_due();
+
         char json[512];
         std::snprintf(json, sizeof(json),
-                      R"({"type":"state","t_ms":%lld,"player":%s,"world":{"time":%s}})",
+                      R"({"type":"state","t_ms":%lld,"player":%s,"world":{"time":%s})",
                       static_cast<long long>(t_ms), player_json, time_json);
-        m_server.publish(json);
+        std::string message(json);
+        if (!palbox_json.empty())
+        {
+            message += R"(,"palbox":)" + palbox_json;
+        }
+        message += '}';
+        m_server.publish(std::move(message));
     }
 
 private:
@@ -175,6 +188,7 @@ private:
     }
 
     Overkit::Explorer m_explorer;
+    Overkit::PalboxCollector m_palbox;
     Overkit::WsServer m_server;
     std::chrono::steady_clock::time_point m_last_push{};
     std::chrono::steady_clock::time_point m_last_time_read{};

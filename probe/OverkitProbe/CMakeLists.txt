@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.22)
 set(TARGET OverkitProbe)
 project(${TARGET} LANGUAGES CXX)
 
-add_library(${TARGET} SHARED dllmain.cpp WsServer.cpp Explorer.cpp)
+add_library(${TARGET} SHARED dllmain.cpp WsServer.cpp Explorer.cpp PalboxCollector.cpp)
 
 target_compile_features(${TARGET} PRIVATE cxx_std_23)
 # ws2_32/bcrypt/crypt32 : WebSocket maison (transport local, ADR-0004)

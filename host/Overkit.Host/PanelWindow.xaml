@@ -2,90 +2,39 @@
     x:Class="Overkit.Host.PanelWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:Overkit.Host"
+    xmlns:views="using:Overkit.Host.Views"
     Title="Overkit">
 
-    <Grid Padding="24,16,24,16">
+    <Grid Padding="24,12,24,16">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <TextBlock Text="Overkit" Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.5" Margin="0,0,0,12" />
+        <TextBlock Text="Overkit" Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.5" Margin="0,0,0,8" />
 
-        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="12" Margin="0,0,0,12">
-            <TextBlock Text="Palbox" Style="{StaticResource TitleTextBlockStyle}" />
-            <TextBlock x:Name="StatusText" VerticalAlignment="Bottom" Opacity="0.6" Margin="0,0,0,4" />
-        </StackPanel>
+        <NavigationView
+            x:Name="Nav"
+            Grid.Row="1"
+            PaneDisplayMode="Top"
+            IsBackButtonVisible="Collapsed"
+            IsSettingsVisible="False"
+            SelectionChanged="Nav_SelectionChanged"
+            Margin="0,0,0,10">
+            <NavigationView.MenuItems>
+                <NavigationViewItem Content="Palbox" Tag="palbox" IsSelected="True" />
+                <NavigationViewItem Content="Audit de base" Tag="audit" />
+                <NavigationViewItem Content="Checklist de craft" Tag="craft" />
+                <NavigationViewItem Content="Accouplement" Tag="breeding" />
+            </NavigationView.MenuItems>
+        </NavigationView>
 
-        <Grid Grid.Row="2" ColumnSpacing="12" Margin="0,0,0,8">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="230" />
-            </Grid.ColumnDefinitions>
-            <TextBox x:Name="SearchBox" PlaceholderText="Rechercher un Pal, une espèce, un passif…" />
-            <ComboBox x:Name="SortBox" Grid.Column="1" HorizontalAlignment="Stretch" SelectedIndex="0">
-                <ComboBoxItem Content="Tri : niveau" />
-                <ComboBoxItem Content="Tri : nom" />
-                <ComboBoxItem Content="Tri : total des talents" />
-            </ComboBox>
+        <Grid Grid.Row="2">
+            <views:PalboxView x:Name="Palbox" />
+            <views:AuditView x:Name="Audit" Visibility="Collapsed" />
+            <views:CraftView x:Name="Craft" Visibility="Collapsed" />
+            <views:BreedingView x:Name="Breeding" Visibility="Collapsed" />
         </Grid>
-
-        <!-- En-têtes de colonnes -->
-        <Grid Grid.Row="3" ColumnSpacing="12" Padding="16,4,16,4" Opacity="0.45">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="28" />
-                <ColumnDefinition Width="2*" />
-                <ColumnDefinition Width="56" />
-                <ColumnDefinition Width="250" />
-                <ColumnDefinition Width="3*" />
-            </Grid.ColumnDefinitions>
-            <TextBlock Grid.Column="1" Text="PAL" FontSize="11" />
-            <TextBlock Grid.Column="2" Text="NIVEAU" FontSize="11" />
-            <TextBlock Grid.Column="3" Text="TALENTS (IV)" FontSize="11" />
-            <TextBlock Grid.Column="4" Text="PASSIFS" FontSize="11" />
-        </Grid>
-
-        <ListView
-            x:Name="PalList"
-            Grid.Row="4"
-            SelectionMode="None"
-            IsItemClickEnabled="False">
-            <ListView.ItemTemplate>
-                <DataTemplate x:DataType="local:PalRow">
-                    <Grid Padding="0,10" ColumnSpacing="12">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="28" />
-                            <ColumnDefinition Width="2*" />
-                            <ColumnDefinition Width="56" />
-                            <ColumnDefinition Width="250" />
-                            <ColumnDefinition Width="3*" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="{x:Bind GenderGlyph}" FontSize="16" VerticalAlignment="Center"
-                                   Foreground="{x:Bind GenderBrush}" />
-                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                            <TextBlock Text="{x:Bind DisplayName}" FontWeight="SemiBold" />
-                            <TextBlock Text="{x:Bind SubName}" Opacity="0.55" FontSize="12" />
-                        </StackPanel>
-                        <Border Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Left"
-                                Background="{ThemeResource SubtleFillColorSecondaryBrush}"
-                                CornerRadius="6" Padding="8,3">
-                            <TextBlock Text="{x:Bind LevelText}" FontSize="13" FontWeight="SemiBold" />
-                        </Border>
-                        <TextBlock Grid.Column="3" VerticalAlignment="Center" FontSize="13" Opacity="0.85">
-                            <Run Text="PV" Foreground="{ThemeResource TextFillColorTertiaryBrush}" /><Run Text=" " /><Run Text="{x:Bind IvHp}" FontWeight="SemiBold" />
-                            <Run Text="  MÊL" Foreground="{ThemeResource TextFillColorTertiaryBrush}" /><Run Text=" " /><Run Text="{x:Bind IvMelee}" FontWeight="SemiBold" />
-                            <Run Text="  TIR" Foreground="{ThemeResource TextFillColorTertiaryBrush}" /><Run Text=" " /><Run Text="{x:Bind IvShot}" FontWeight="SemiBold" />
-                            <Run Text="  DÉF" Foreground="{ThemeResource TextFillColorTertiaryBrush}" /><Run Text=" " /><Run Text="{x:Bind IvDefense}" FontWeight="SemiBold" />
-                        </TextBlock>
-                        <TextBlock Grid.Column="4" Text="{x:Bind Passives}" VerticalAlignment="Center"
-                                   TextWrapping="Wrap" FontSize="12" Opacity="0.75" />
-                    </Grid>
-                </DataTemplate>
-            </ListView.ItemTemplate>
-        </ListView>
     </Grid>
 </Window>

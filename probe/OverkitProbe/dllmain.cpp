@@ -1,5 +1,6 @@
 ﻿#include <chrono>
 #include <cstdio>
+#include <format>
 
 #include <Mod/CppUserModBase.hpp>
 #include <DynamicOutput/Output.hpp>
@@ -10,6 +11,7 @@
 #include <Unreal/CoreUObject/UObject/UnrealType.hpp>
 
 #include "Explorer.hpp"
+#include "Mapping.hpp"
 #include "PalboxCollector.hpp"
 #include "WorldCollectors.hpp"
 #include "WsServer.hpp"
@@ -20,7 +22,7 @@ using namespace RC;
 
 // Version de la Sonde — source unique, reprise par ModVersion, le log et le
 // handshake. Règle : mineure = fonctionnalité, patch = modification.
-#define OVERKIT_PROBE_VERSION "0.5.0"
+#define OVERKIT_PROBE_VERSION "0.6.0"
 
 namespace
 {
@@ -63,10 +65,13 @@ public:
     {
         Output::send<LogLevel::Verbose>(STR("[OverkitProbe] Unreal initialise - reflexion disponible\n"));
 
-        // EXG-004 : annonce des versions au premier contact.
-        const std::string handshake =
-            R"({"type":"handshake","probe_version":")" OVERKIT_PROBE_VERSION R"(","schema_version":"0.1-spike",)"
-            R"("game_build":"unknown","mapping_version":"none"})";
+        // EXG-004 : annonce des versions au premier contact — celles du
+        // mapping.json déployé avec le mod.
+        Overkit::Mapping::get().tick();
+        const std::string handshake = std::format(
+            R"({{"type":"handshake","probe_version":")" OVERKIT_PROBE_VERSION
+            R"(","schema_version":"0.1-spike","game_build":"{}","mapping_version":"{}"}})",
+            Overkit::Mapping::get().game_build(), Overkit::Mapping::get().mapping_version());
 
         m_server.start(ProbePort, handshake, [](const std::string& message) {
             Output::send<LogLevel::Verbose>(STR("[OverkitProbe] [ws] {}\n"), to_wstring(message));
@@ -84,6 +89,7 @@ public:
         }
         m_last_push = now;
 
+        Overkit::Mapping::get().tick();
         m_explorer.tick();
 
         // Heure in-game à 1 Hz : PalGameStateInGame.WorldTime (struct
@@ -94,10 +100,10 @@ public:
             m_time_ok = false;
             try
             {
-                auto* game_state = Unreal::UObjectGlobals::FindFirstOf(STR("PalGameStateInGame"));
+                auto* game_state = Unreal::UObjectGlobals::FindFirstOf(OVKM("class.game_state", "PalGameStateInGame"));
                 if (game_state)
                 {
-                    auto* ticks = game_state->GetValuePtrByPropertyNameInChain<std::int64_t>(STR("WorldTime"));
+                    auto* ticks = game_state->GetValuePtrByPropertyNameInChain<std::int64_t>(OVKM("prop.world_time", "WorldTime"));
                     if (ticks && *ticks > 0)
                     {
                         m_world_ticks = *ticks;
@@ -115,13 +121,13 @@ public:
         Vector3d pos{};
         try
         {
-            auto* pawn = Unreal::UObjectGlobals::FindFirstOf(STR("PalPlayerCharacter"));
+            auto* pawn = Unreal::UObjectGlobals::FindFirstOf(OVKM("class.player_pawn", "PalPlayerCharacter"));
             if (pawn)
             {
-                auto** root = pawn->GetValuePtrByPropertyNameInChain<Unreal::UObject*>(STR("RootComponent"));
+                auto** root = pawn->GetValuePtrByPropertyNameInChain<Unreal::UObject*>(OVKM("prop.root_component", "RootComponent"));
                 if (root && *root)
                 {
-                    auto* location = (*root)->GetValuePtrByPropertyNameInChain<Vector3d>(STR("RelativeLocation"));
+                    auto* location = (*root)->GetValuePtrByPropertyNameInChain<Vector3d>(OVKM("prop.relative_location", "RelativeLocation"));
                     if (location)
                     {
                         pos = *location;
@@ -189,10 +195,33 @@ public:
         std::string message(json);
         if (domains_due)
         {
+            const auto bases_json = Overkit::WorldCollectors::collect_bases_json();
+            const auto inventory_json = Overkit::WorldCollectors::collect_inventory_json();
             message += R"(,"palbox":)" + palbox_json;
             message += R"(,"party":)" + party_json;
-            message += R"(,"bases":)" + Overkit::WorldCollectors::collect_bases_json();
-            message += R"(,"inventory":)" + Overkit::WorldCollectors::collect_inventory_json();
+            message += R"(,"bases":)" + bases_json;
+            message += R"(,"inventory":)" + inventory_json;
+
+            // Domaine collectors : l'état de santé de chaque collecteur,
+            // publié avec le resync (§3.1).
+            auto domain_status = [](const std::string& domain) -> const char* {
+                if (domain.find(R"("status":"ok")") != std::string::npos)
+                {
+                    return "ok";
+                }
+                if (domain.find(R"("status":"degraded")") != std::string::npos)
+                {
+                    return "degraded";
+                }
+                return "unavailable";
+            };
+            message += std::format(
+                R"(,"collectors":{{"player_position":"{}","world_time":"{}","palbox":"{}",)"
+                R"("party":"{}","bases":"{}","inventory":"{}","nearby":"{}"}})",
+                ok ? "ok" : "unavailable", m_time_ok ? "ok" : "unavailable",
+                domain_status(palbox_json), domain_status(party_json),
+                domain_status(bases_json), domain_status(inventory_json),
+                domain_status(m_nearby_json));
         }
         if (!m_nearby_json.empty())
         {

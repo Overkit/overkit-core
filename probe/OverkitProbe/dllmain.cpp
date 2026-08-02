@@ -1,4 +1,4 @@
-#include <chrono>
+﻿#include <chrono>
 #include <cstdio>
 
 #include <Mod/CppUserModBase.hpp>
@@ -9,6 +9,7 @@
 #include <Unreal/FProperty.hpp>
 #include <Unreal/CoreUObject/UObject/UnrealType.hpp>
 
+#include "Explorer.hpp"
 #include "WsServer.hpp"
 
 using namespace RC;
@@ -75,7 +76,7 @@ public:
         }
         m_last_push = now;
 
-        dump_time_sources_once();
+        m_explorer.tick();
 
         // Heure in-game à 1 Hz : PalGameStateInGame.WorldTime (struct
         // GameDateTime, champ unique Ticks en unités de 100 ns).
@@ -168,113 +169,17 @@ public:
     }
 
 private:
-    // Exploration ponctuelle : liste propriétés ET valeurs simples des classes
-    // candidates pour l'heure in-game (travail de mapping). Déclenchée quand
-    // PalGameStateInGame existe (= partie chargée), pour éviter les objets
-    // modèles des mondes temporaires. Retiré une fois mapping.json en place.
-    auto dump_time_sources_once() -> void
-    {
-        if (m_time_dump_done)
-        {
-            return;
-        }
-        try
-        {
-            if (!Unreal::UObjectGlobals::FindFirstOf(STR("PalGameStateInGame")))
-            {
-                return; // pas encore en partie
-            }
-            m_time_dump_done = true;
-
-            for (const auto* class_name : {STR("PalTimeManager"), STR("PalGameStateInGame")})
-            {
-                std::vector<Unreal::UObject*> instances{};
-                Unreal::UObjectGlobals::FindAllOf(class_name, instances);
-                for (auto* object : instances)
-                {
-                    Output::send<LogLevel::Verbose>(STR("[OverkitProbe] Proprietes de {} :\n"),
-                                                    object->GetFullName());
-                    for (auto* property : object->GetClassPrivate()->ForEachPropertyInChain())
-                    {
-                        const auto type_name = property->GetClass().GetName();
-                        std::wstring value = L"";
-                        if (type_name == STR("IntProperty"))
-                        {
-                            value = L" = " + std::to_wstring(*property->ContainerPtrToValuePtr<int32_t>(object));
-                        }
-                        else if (type_name == STR("DoubleProperty"))
-                        {
-                            value = L" = " + std::to_wstring(*property->ContainerPtrToValuePtr<double>(object));
-                        }
-                        else if (type_name == STR("FloatProperty"))
-                        {
-                            value = L" = " + std::to_wstring(*property->ContainerPtrToValuePtr<float>(object));
-                        }
-                        else if (type_name == STR("ByteProperty"))
-                        {
-                            value = L" = " + std::to_wstring(*property->ContainerPtrToValuePtr<std::uint8_t>(object));
-                        }
-                        Output::send<LogLevel::Verbose>(STR("[OverkitProbe]   {} ({}){}\n"),
-                                                        property->GetName(), type_name, value);
-
-                        // Descente d'un niveau dans les structs liées au temps.
-                        if (type_name == STR("StructProperty") &&
-                            property->GetName().find(STR("Time")) != std::wstring::npos)
-                        {
-                            auto* struct_property = static_cast<Unreal::FStructProperty*>(property);
-                            auto inner_struct = struct_property->GetStruct();
-                            void* struct_ptr = property->ContainerPtrToValuePtr<void>(object);
-                            Output::send<LogLevel::Verbose>(STR("[OverkitProbe]     -> struct {} :\n"),
-                                                            inner_struct->GetName());
-                            for (auto* inner : inner_struct->ForEachPropertyInChain())
-                            {
-                                const auto inner_type = inner->GetClass().GetName();
-                                std::wstring inner_value = L"";
-                                if (inner_type == STR("IntProperty"))
-                                {
-                                    inner_value = L" = " + std::to_wstring(*inner->ContainerPtrToValuePtr<int32_t>(struct_ptr));
-                                }
-                                else if (inner_type == STR("Int64Property"))
-                                {
-                                    inner_value = L" = " + std::to_wstring(*inner->ContainerPtrToValuePtr<std::int64_t>(struct_ptr));
-                                }
-                                else if (inner_type == STR("DoubleProperty"))
-                                {
-                                    inner_value = L" = " + std::to_wstring(*inner->ContainerPtrToValuePtr<double>(struct_ptr));
-                                }
-                                else if (inner_type == STR("FloatProperty"))
-                                {
-                                    inner_value = L" = " + std::to_wstring(*inner->ContainerPtrToValuePtr<float>(struct_ptr));
-                                }
-                                else if (inner_type == STR("ByteProperty"))
-                                {
-                                    inner_value = L" = " + std::to_wstring(*inner->ContainerPtrToValuePtr<std::uint8_t>(struct_ptr));
-                                }
-                                Output::send<LogLevel::Verbose>(STR("[OverkitProbe]     {} ({}){}\n"),
-                                                                inner->GetName(), inner_type, inner_value);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        catch (...)
-        {
-            m_time_dump_done = true;
-        }
-    }
-
     static auto to_wstring(const std::string& input) -> std::wstring
     {
         return {input.begin(), input.end()};
     }
 
+    Overkit::Explorer m_explorer;
     Overkit::WsServer m_server;
     std::chrono::steady_clock::time_point m_last_push{};
     std::chrono::steady_clock::time_point m_last_time_read{};
     std::int64_t m_world_ticks{0};
     bool m_time_ok{false};
-    bool m_time_dump_done{false};
 };
 
 #define OVERKIT_PROBE_API __declspec(dllexport)

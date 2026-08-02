@@ -19,7 +19,7 @@ using namespace RC;
 
 // Version de la Sonde — source unique, reprise par ModVersion, le log et le
 // handshake. Règle : mineure = fonctionnalité, patch = modification.
-#define OVERKIT_PROBE_VERSION "0.3.0"
+#define OVERKIT_PROBE_VERSION "0.4.0"
 
 namespace
 {
@@ -168,18 +168,20 @@ public:
             std::snprintf(time_json, sizeof(time_json), R"({"status":"unavailable"})");
         }
 
-        // Palbox : resync 30 s, embarqué dans le même message que la position
-        // (le transport ne garde que le dernier état publié).
-        const auto palbox_json = m_palbox.collect_if_due();
+        // Palbox + équipe : resync 30 s, embarqués dans le même message que la
+        // position (le transport ne garde que le dernier état publié).
+        std::string palbox_json, party_json;
+        const bool domains_due = m_palbox.collect_if_due(palbox_json, party_json);
 
         char json[512];
         std::snprintf(json, sizeof(json),
                       R"({"type":"state","t_ms":%lld,"player":%s,"world":{"time":%s})",
                       static_cast<long long>(t_ms), player_json, time_json);
         std::string message(json);
-        if (!palbox_json.empty())
+        if (domains_due)
         {
             message += R"(,"palbox":)" + palbox_json;
+            message += R"(,"party":)" + party_json;
         }
         message += '}';
         m_server.publish(std::move(message));

@@ -96,7 +96,10 @@ public sealed partial class PanelWindow : Window
             ? $"{palbox.Pals.Count}/{palbox.Owned_count} synchronisés — ouvrir la boîte en jeu pour compléter"
             : $"{palbox.Pals.Count} Pals";
 
-        _all = palbox.Pals.Select(ToRow).ToList();
+        var partyIds = snapshot.Party?.Member_instance_ids is { Count: > 0 } ids
+            ? new HashSet<string>(ids, StringComparer.OrdinalIgnoreCase)
+            : [];
+        _all = palbox.Pals.Select(pal => ToRow(pal, partyIds.Contains(pal.Instance_id))).ToList();
         ApplyView();
     }
 
@@ -126,7 +129,7 @@ public sealed partial class PanelWindow : Window
         }
     }
 
-    private PalRow ToRow(Pal pal)
+    private PalRow ToRow(Pal pal, bool inParty)
     {
         var species = _refData.SpeciesName(pal.Species_id);
         var nickname = string.IsNullOrWhiteSpace(pal.Nickname) ? null : pal.Nickname;
@@ -138,8 +141,8 @@ public sealed partial class PanelWindow : Window
 
         return new PalRow
         {
-            DisplayName = nickname ?? species,
-            SubName = nickname is null ? "" : species,
+            DisplayName = (inParty ? "★ " : "") + (nickname ?? species),
+            SubName = nickname is null ? (inParty ? "dans l'équipe" : "") : species,
             GenderGlyph = pal.Gender switch
             {
                 PalGender.Male => "♂",

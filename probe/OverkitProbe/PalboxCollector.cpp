@@ -218,9 +218,55 @@ namespace
         return occupied;
     }
 
+    // Instance_ids des slots occupés d'un conteneur (ordre des slots).
+    auto container_member_ids(Unreal::UObject* container) -> std::string
+    {
+        std::string out;
+        auto* slot_array = container->GetValuePtrByPropertyNameInChain<Unreal::TArray<Unreal::UObject*>>(STR("SlotArray"));
+        if (!slot_array)
+        {
+            return out;
+        }
+        for (std::int32_t i = 0; i < slot_array->Num(); ++i)
+        {
+            auto* slot = (*slot_array)[i];
+            if (!slot)
+            {
+                continue;
+            }
+            auto* handle_prop = static_cast<Unreal::FStructProperty*>(
+                find_property(slot->GetClassPrivate(), STR("ReplicateHandleID")));
+            if (!handle_prop)
+            {
+                continue;
+            }
+            void* handle = handle_prop->ContainerPtrToValuePtr<void>(slot);
+            if (auto* id_prop = find_property(handle_prop->GetStruct().Get(), STR("InstanceId")))
+            {
+                const auto* guid = id_prop->ContainerPtrToValuePtr<Guid128>(handle);
+                if (!guid->is_zero())
+                {
+                    if (!out.empty())
+                    {
+                        out += ',';
+                    }
+                    out += '"' + guid->to_string() + '"';
+                }
+            }
+        }
+        return out;
+    }
+
+    // Conteneur de l'équipe active : PalOtomoHolderComponentBase.CharacterContainer.
+    auto find_party_container() -> Unreal::UObject*
+    {
+        auto* holder = Unreal::UObjectGlobals::FindFirstOf(STR("PalOtomoHolderComponentBase"));
+        return holder ? read_object(holder, STR("CharacterContainer")) : nullptr;
+    }
+
     // Voie principale : IndividualParameterMap du PalCharacterManager (source
     // serveur complète, indépendante de la réplication paresseuse des slots).
-    auto collect_from_manager(const Guid128& box_guid, std::string& pals) -> bool
+    auto collect_from_manager(const Guid128& box_guid, const Guid128& party_guid, std::string& pals) -> bool
     {
         auto* manager = Unreal::UObjectGlobals::FindFirstOf(STR("PalCharacterManager"));
         if (!manager)
@@ -246,7 +292,9 @@ namespace
             }
             void* pair = map->GetData(i, layout);
             auto* parameter = *value_prop->ContainerPtrToValuePtr<Unreal::UObject*>(pair);
-            if (!parameter || !save_belongs_to(parameter, box_guid))
+            if (!parameter ||
+                (!save_belongs_to(parameter, box_guid) &&
+                 (party_guid.is_zero() || !save_belongs_to(parameter, party_guid))))
             {
                 continue;
             }
@@ -324,38 +372,59 @@ namespace
 
 namespace Overkit
 {
-    auto PalboxCollector::collect_if_due() -> std::string
+    auto PalboxCollector::collect_if_due(std::string& palbox_json, std::string& party_json) -> bool
     {
         const auto now = std::chrono::steady_clock::now();
         if (now - g_last_scan < std::chrono::seconds(30))
         {
-            return {};
+            return false;
         }
         g_last_scan = now;
+
+        palbox_json = R"({"status":"unavailable"})";
+        party_json = R"({"status":"unavailable"})";
 
         try
         {
             auto* player_state = Unreal::UObjectGlobals::FindFirstOf(STR("PalPlayerState"));
             if (!player_state)
             {
-                return R"({"status":"unavailable"})";
+                return true;
             }
             auto* storage = read_object(player_state, STR("PalStorage"));
             auto* container = storage ? read_object(storage, STR("TargetContainer")) : nullptr;
             if (!container)
             {
-                return R"({"status":"unavailable"})";
+                return true;
             }
 
+            auto* party_container = find_party_container();
             const auto box_guid = read_container_guid(container);
-            const auto owned = count_occupied_slots(container);
+            const auto party_guid = party_container ? read_container_guid(party_container) : Guid128{};
+
+            if (party_container)
+            {
+                party_json = std::format(R"({{"status":"ok","member_instance_ids":[{}]}})",
+                                         container_member_ids(party_container));
+            }
+
+            auto owned = count_occupied_slots(container);
+            if (party_container && owned >= 0)
+            {
+                const auto party_count = count_occupied_slots(party_container);
+                owned += party_count > 0 ? party_count : 0;
+            }
             std::string pals;
 
-            bool via_manager = !box_guid.is_zero() && collect_from_manager(box_guid, pals);
+            bool via_manager = !box_guid.is_zero() && collect_from_manager(box_guid, party_guid, pals);
             if (!via_manager)
             {
                 pals.clear();
                 collect_from_slots(container, pals);
+                if (party_container)
+                {
+                    collect_from_slots(party_container, pals);
+                }
             }
 
             // ok = tous les Pals possédés sont lus ; degraded = lecture
@@ -368,13 +437,16 @@ namespace Overkit
                 ++synced;
             }
             const bool complete = via_manager && owned >= 0 && synced >= owned;
-            return std::format(R"({{"status":"{}","owned_count":{},"pals":[{}]}})",
-                               complete ? "ok" : "degraded", owned, pals);
+            palbox_json = std::format(R"({{"status":"{}","owned_count":{},"pals":[{}]}})",
+                                      complete ? "ok" : "degraded", owned, pals);
+            return true;
         }
         catch (...)
         {
-            // EXG-003 : jamais de crash — domaine indisponible, on réessaiera.
-            return R"({"status":"unavailable"})";
+            // EXG-003 : jamais de crash — domaines indisponibles, on réessaiera.
+            palbox_json = R"({"status":"unavailable"})";
+            party_json = R"({"status":"unavailable"})";
+            return true;
         }
     }
 }

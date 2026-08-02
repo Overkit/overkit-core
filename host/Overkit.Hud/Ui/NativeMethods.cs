@@ -47,4 +47,8 @@ public static class NativeMethods
 
     [DllImport("user32.dll")]
     public static extern bool DestroyIcon(IntPtr hIcon);
+
+    /// <summary>ClipCursor(IntPtr.Zero) libère le curseur d'un éventuel confinement posé par le jeu.</summary>
+    [DllImport("user32.dll")]
+    public static extern bool ClipCursor(IntPtr lpRect);
 }

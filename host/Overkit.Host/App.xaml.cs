@@ -107,6 +107,9 @@ public partial class App : Application
                 _previousForeground = NativeMethods.GetForegroundWindow();
                 _panel.AppWindow.Show();
                 _panel.Activate();
+                // §2.2 : à l'ouverture, le panneau libère le curseur que le
+                // jeu confine en borderless.
+                NativeMethods.ClipCursor(IntPtr.Zero);
             }
         });
     }

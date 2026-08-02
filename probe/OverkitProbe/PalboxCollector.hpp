@@ -17,10 +17,11 @@ namespace Overkit
     class PalboxCollector
     {
     public:
-        // À appeler sur le thread jeu. Retourne le JSON du domaine palbox
-        // ({"status":...}) ou une chaîne vide si rien de neuf à publier.
-        // Cadence : scan complet toutes les 30 s (resync du cahier des
-        // charges ; l'event-driven viendra avec les hooks).
-        auto collect_if_due() -> std::string;
+        // À appeler sur le thread jeu. Remplit les JSON des domaines palbox
+        // (tous les Pals possédés : boîte + équipe) et party (instance_ids de
+        // l'équipe active, via PalOtomoHolderComponentBase.CharacterContainer)
+        // et retourne true quand un scan a eu lieu. Cadence : 30 s (resync du
+        // cahier des charges ; l'event-driven viendra avec les hooks).
+        auto collect_if_due(std::string& palbox_json, std::string& party_json) -> bool;
     };
 }

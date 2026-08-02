@@ -120,6 +120,10 @@ namespace Overkit
             {
                 line.pop_back();
             }
+            while (!line.empty() && (line.front() == L'\xFEFF' || line.front() == L' ' || line.front() > 0x7F))
+            {
+                line.erase(0, 1); // BOM ou artefact d'encodage
+            }
             if (line.empty() || line.front() == L'#')
             {
                 continue;

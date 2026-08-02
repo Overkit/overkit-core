@@ -170,10 +170,11 @@
       "required": ["status"],
       "properties": {
         "status": { "$ref": "#/definitions/FieldStatus" },
+        "owned_count": { "type": "integer", "description": "Nombre de slots occupés de la Palbox (fiable même sans synchro complète). status=degraded quand pals contient moins d'entrées que owned_count : le jeu ne matérialise les paramètres d'une page qu'à son premier affichage dans la session." },
         "pals": { "type": "array", "items": { "$ref": "#/definitions/Pal" } }
       },
       "additionalProperties": false,
-      "description": "Tous les Pals possédés (§3.1). Event-driven + resync 30 s. Mapping à découvrir — domaine le plus riche, socle des modules Accouplement inversé et Audit de base."
+      "description": "Tous les Pals possédés (§3.1). Resync 30 s. Mapping validé (2026-08-02) : PalCharacterManager.IndividualParameterMap filtré par SaveParameter.SlotId.ContainerId == PalPlayerState.PalStorage.TargetContainer.ID ; repli sur les slots répliqués côté client distant."
     },
     "Party": {
       "type": "object",

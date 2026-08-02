@@ -38,7 +38,7 @@ overkit/
 - [x] Audit de base : alertes faim/santé mentale des travailleurs (validé sur données réelles)
 - [x] Checklist de craft : recette × quantité → manquants → espèces à farmer (drops)
 - [x] Accouplement inversé : CombiRank + combos uniques, paires réalisables avec la Palbox réelle (genres inclus)
-- [ ] Vue carte (image + marqueurs + position live) + Routing de farm minimal
+- [x] Vue carte (fond stylisé v1, bases, position live, spots jour/nuit) + Routing de farm (clustering, distances, cible HUD)
 - Critère de sortie : les 3 modules utilisés en session réelle une semaine, sans alt-tab
 
 **Phase 1 — Noyau** (bouclée le 02/08/2026)

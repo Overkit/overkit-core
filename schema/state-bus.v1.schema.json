@@ -1,0 +1,249 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkit.nallraen.fr/schema/state-bus/1.0",
+  "title": "Overkit State Bus",
+  "description": "Contrat central d'Overkit (§3 du cahier des charges). Les messages transitent de la Sonde vers le host sur le WebSocket local ; le host reconstruit un GameStateSnapshot immuable par tick et le distribue aux modules. Chaque domaine porte un statut : un module ne voit jamais un champ sans savoir s'il est fiable. SemVer : ajout de champ = mineur, suppression/renommage = majeur (EXG-020).",
+  "oneOf": [
+    { "$ref": "#/$defs/HandshakeMessage" },
+    { "$ref": "#/$defs/StateMessage" }
+  ],
+  "$defs": {
+    "HandshakeMessage": {
+      "type": "object",
+      "description": "Premier message de la Sonde à chaque connexion (EXG-004). Le host refuse ou dégrade selon compatibilité.",
+      "required": ["type", "probe_version", "schema_version", "game_build", "mapping_version"],
+      "properties": {
+        "type": { "const": "handshake" },
+        "probe_version": { "type": "string", "description": "SemVer de la Sonde" },
+        "schema_version": { "type": "string", "description": "Version du présent schéma implémentée par la Sonde" },
+        "game_build": { "type": "string", "description": "Build du jeu détecté, 'unknown' si indisponible" },
+        "mapping_version": { "type": "string", "description": "Version du mapping.json chargé, 'none' si intégré en dur" }
+      },
+      "additionalProperties": false
+    },
+    "StateMessage": {
+      "type": "object",
+      "description": "Snapshot partiel ou complet de l'état du jeu. Tout domaine absent est réputé inchangé depuis le dernier message ; tout domaine présent remplace intégralement sa version précédente.",
+      "required": ["type", "t_ms"],
+      "properties": {
+        "type": { "const": "state" },
+        "t_ms": { "type": "integer", "description": "Horloge monotone de la Sonde en millisecondes (pas une heure calendaire)" },
+        "player": { "$ref": "#/$defs/Player" },
+        "world": { "$ref": "#/$defs/World" },
+        "inventory": { "$ref": "#/$defs/Inventory" },
+        "palbox": { "$ref": "#/$defs/Palbox" },
+        "party": { "$ref": "#/$defs/Party" },
+        "bases": { "$ref": "#/$defs/Bases" },
+        "nearby": { "$ref": "#/$defs/Nearby" },
+        "collectors": { "$ref": "#/$defs/Collectors" }
+      },
+      "additionalProperties": false
+    },
+    "FieldStatus": {
+      "type": "string",
+      "enum": ["ok", "degraded", "unavailable"],
+      "description": "ok = donnée fraîche et fiable ; degraded = donnée présente mais partielle ou datée (collecteur ralenti) ; unavailable = chemin de réflexion non résolu ou domaine hors de portée (EXG-003)."
+    },
+    "Vector3": {
+      "type": "object",
+      "required": ["x", "y", "z"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "z": { "type": "number" }
+      },
+      "additionalProperties": false,
+      "description": "Coordonnées monde Unreal (cm). La transformation vers les coordonnées carte relève du dataset (map_calibration), pas du State Bus."
+    },
+    "Gauge": {
+      "type": "object",
+      "required": ["current", "max"],
+      "properties": {
+        "current": { "type": "number" },
+        "max": { "type": "number" }
+      },
+      "additionalProperties": false
+    },
+    "Player": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": { "$ref": "#/$defs/FieldStatus" },
+        "position": { "$ref": "#/$defs/Vector3" },
+        "rotation_yaw": { "type": "number", "description": "Cap en degrés, utile pour la flèche de routing" },
+        "level": { "type": "integer" },
+        "hp": { "$ref": "#/$defs/Gauge" },
+        "stamina": { "$ref": "#/$defs/Gauge" }
+      },
+      "additionalProperties": false,
+      "description": "Cadence cible : position/rotation 10 Hz ; niveau/HP/stamina event-driven + resync. Mapping validé : PalPlayerCharacter.RootComponent.RelativeLocation. Niveau/HP : mapping à découvrir (piste : PalPlayerState)."
+    },
+    "World": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": { "$ref": "#/$defs/FieldStatus" },
+        "time": {
+          "type": "object",
+          "required": ["status"],
+          "properties": {
+            "status": { "$ref": "#/$defs/FieldStatus" },
+            "ticks": { "type": "integer", "description": "GameDateTime.Ticks, unités de 100 ns (mapping validé : PalGameStateInGame.WorldTime)" },
+            "day": { "type": "integer" },
+            "hour": { "type": "integer", "minimum": 0, "maximum": 23 },
+            "minute": { "type": "integer", "minimum": 0, "maximum": 59 },
+            "is_night": { "type": "boolean", "description": "Piste : délégués OnNightStart/OnNightEnd de PalTimeManager, sinon dérivé des heures" }
+          },
+          "additionalProperties": false
+        },
+        "weather": { "type": "string", "description": "Identifiant brut du jeu, non traduit — mapping à découvrir" },
+        "world_name": { "type": "string" },
+        "is_multiplayer": { "type": "boolean" }
+      },
+      "additionalProperties": false,
+      "description": "Cadence cible : 1 Hz."
+    },
+    "ItemStack": {
+      "type": "object",
+      "required": ["item_id", "count"],
+      "properties": {
+        "item_id": { "type": "string", "description": "Identifiant statique du jeu ; le libellé/l'icône viennent du dataset (refdata)" },
+        "count": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "Inventory": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": { "$ref": "#/$defs/FieldStatus" },
+        "containers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["container_id", "kind", "slots"],
+            "properties": {
+              "container_id": { "type": "string" },
+              "kind": { "type": "string", "enum": ["player", "key_items", "chest", "food_box", "other"] },
+              "slots": { "type": "array", "items": { "$ref": "#/$defs/ItemStack" } }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false,
+      "description": "Items joueur + coffres de la base active (§3.1). Event-driven + resync 30 s. Mapping à découvrir."
+    },
+    "Pal": {
+      "type": "object",
+      "required": ["instance_id", "species_id"],
+      "properties": {
+        "instance_id": { "type": "string", "description": "Identifiant stable de l'individu (pour suivre un Pal entre snapshots)" },
+        "species_id": { "type": "string", "description": "Clé vers refdata (pals.json du dataset)" },
+        "nickname": { "type": "string" },
+        "gender": { "type": "string", "enum": ["male", "female", "unknown"] },
+        "level": { "type": "integer" },
+        "passives": { "type": "array", "items": { "type": "string" }, "description": "Identifiants bruts, libellés via refdata" },
+        "talents": {
+          "type": "object",
+          "description": "IVs 0-100 (donnée non visible en jeu — assumé et documenté, cf. R6)",
+          "properties": {
+            "hp": { "type": "integer" },
+            "attack": { "type": "integer" },
+            "defense": { "type": "integer" }
+          },
+          "additionalProperties": false
+        },
+        "work_suitabilities": {
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 0, "maximum": 5 },
+          "description": "Aptitude → rang (ex. kindling: 2)"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Palbox": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": { "$ref": "#/$defs/FieldStatus" },
+        "pals": { "type": "array", "items": { "$ref": "#/$defs/Pal" } }
+      },
+      "additionalProperties": false,
+      "description": "Tous les Pals possédés (§3.1). Event-driven + resync 30 s. Mapping à découvrir — domaine le plus riche, socle des modules Accouplement inversé et Audit de base."
+    },
+    "Party": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": { "$ref": "#/$defs/FieldStatus" },
+        "member_instance_ids": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    },
+    "Bases": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": { "$ref": "#/$defs/FieldStatus" },
+        "list": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["base_id"],
+            "properties": {
+              "base_id": { "type": "string" },
+              "position": { "$ref": "#/$defs/Vector3" },
+              "workers": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["instance_id"],
+                  "properties": {
+                    "instance_id": { "type": "string" },
+                    "hunger": { "$ref": "#/$defs/Gauge" },
+                    "sanity": { "$ref": "#/$defs/Gauge" },
+                    "is_working": { "type": "boolean" }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false,
+      "description": "Pals assignés et jauges par base (§3.1). Socle du module Audit de base. Mapping à découvrir."
+    },
+    "Nearby": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": { "$ref": "#/$defs/FieldStatus" },
+        "actors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["species_id"],
+            "properties": {
+              "species_id": { "type": "string" },
+              "level": { "type": "integer" },
+              "hp": { "$ref": "#/$defs/Gauge" },
+              "position": { "$ref": "#/$defs/Vector3" },
+              "distance": { "type": "number", "description": "Distance au joueur en cm" }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false,
+      "description": "Pals dans le rayon de streaming (§3.1), cadence 2 Hz. Socle des modules Routing de farm et Capture assist."
+    },
+    "Collectors": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/FieldStatus" },
+      "description": "Statut de chaque collecteur de la Sonde, clé = nom du collecteur (ex. player_position, world_time, palbox). Publié à chaque changement."
+    }
+  }
+}

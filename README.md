@@ -38,7 +38,7 @@ overkit/
 - [x] Schéma State Bus v1 (JSON Schema → génération types C#, EXG-020)
 - [x] Sonde (v0.6.0) : les 8 domaines du State Bus collectés (`player`, `world`, `palbox`, `party`, `bases`, `inventory`, `nearby`, `collectors`), `mapping.json` externalisé rechargeable à chaud (EXG-003 démontrée : sabotage/réparation en live sans recompilation)
 - [x] **Critère de sortie atteint** : la Palbox s'affiche dans le panneau en live (WinUI 3, recherche/tri, noms localisés via le dataset, équipe marquée ★, curseur libéré)
-- [~] Dataset : Dumper v0.1.0 ✓ (générique, piloté à chaud), builder ✓ (`pals.json` 753 espèces nommées + CombiRank, `passives.json` 419, `breeding.json` 258 combos) — restent spawners, recettes, drops, calibration formalisée, publication en release
+- [x] Dataset : Dumper générique piloté à chaud + builder complet — `pals`, `passives`, `breeding`, `items`, `recipes`, `drops`, `spawners` (+ `mapping.json`, calibration). Première release publiée : `dataset-1.10.1103.0-r1`
 - [x] Host : State Bus, connexion Sonde typée + reconnexion, mode statique, HUD compact lié au jeu, panneau WinUI 3, refdata, calibration, settings, hotkey, tray
 - Critère de sortie : EXG-003, 010, 011 verts ; EXG-013 validé au niveau spike (mesure fine P95/P99 à refaire) ; EXG-030 démontré (pipeline en minutes) ; la Palbox s'affiche dans le panneau en live ✓
 

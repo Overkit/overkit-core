@@ -36,7 +36,9 @@ overkit/
 **Phase 1 — Noyau** (en cours depuis le 02/08/2026)
 
 - [ ] Schéma State Bus v1 (JSON Schema → génération types C#, EXG-020)
-- [~] Sonde (v0.3.0) : collecteurs `player.position` ✓, `world.time` ✓, `palbox` ✓ (validé 52/52, statut degraded tant que la synchro paresseuse du jeu est incomplète) — restent `party`, `inventory`, `base`, `nearby`, `mapping.json` externalisé, statuts de collecteurs
+- [~] Sonde (v0.4.0) : collecteurs `player.position` ✓, `world.time` ✓, `palbox` ✓ (52/52, équipe incluse, degraded honnête), `party` ✓ — restent `inventory`, `base`, `nearby`, `mapping.json` externalisé, statuts de collecteurs
+- [x] **Critère de sortie atteint** : la Palbox s'affiche dans le panneau en live (WinUI 3, recherche/tri, noms localisés via le dataset, équipe marquée ★, curseur libéré)
+- [~] Dataset : Dumper v0.1.0 ✓ (générique, piloté à chaud), builder ✓ (`pals.json` 753 espèces nommées + CombiRank, `passives.json` 419, `breeding.json` 258 combos) — restent spawners, recettes, drops, calibration formalisée, publication en release
 - [~] Host : State Bus ✓, connexion Sonde typée + reconnexion ✓, mode statique ✓, HUD ✓, calibration depuis le dataset ✓, settings ✓, hotkey ✓ — reste : panneau WinUI 3, chargeur de dataset complet
 - [ ] Dumper v1 + premier dataset publié
 - Critère de sortie : EXG-003, 010, 011, 013, 030 verts ; la Palbox du joueur s'affiche dans le panneau en live

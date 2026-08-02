@@ -1,0 +1,15 @@
+{
+  "$comment": "Brouillon de calibration monde <-> carte in-game (§4.2). Établi le 2026-08-02 sur 2 points de repère, build Game Pass 1.10.1103.0, MainWorld_5. Axes croisés UE : carte_x depend de monde_Y, carte_y de monde_X. Validé sur un 3e point indépendant : prédiction (144, -358) = carte in-game (144, -358), correspondance exacte. À généraliser (5 points de contrôle formels, zones underground) pour devenir map_calibration.json du dataset.",
+  "schema_version": "0.1-draft",
+  "game_build": "1.10.1103.0",
+  "world": "MainWorld_5",
+  "world_to_map": {
+    "map_x": { "source_axis": "world_y", "scale": 0.0021847, "offset": -345.95 },
+    "map_y": { "source_axis": "world_x", "scale": 0.0021673, "offset": 265.95 }
+  },
+  "reference_points": [
+    { "world": { "x": -340033, "y": 251267, "z": 1159 }, "map": { "x": 203, "y": -471 } },
+    { "world": { "x": -315117, "y": 186728, "z": 3359 }, "map": { "x": 62, "y": -417 } }
+  ],
+  "control_points": []
+}

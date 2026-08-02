@@ -27,7 +27,12 @@
             <AutoSuggestBox x:Name="SpeciesBox" PlaceholderText="Espèce à farmer (ex. Cotileau…)" />
             <ToggleSwitch x:Name="TimeGate" Grid.Row="1" OffContent="Ignorer jour/nuit"
                           OnContent="Respecter jour/nuit" IsOn="True" />
-            <TextBlock x:Name="StatusText" Grid.Row="2" Opacity="0.7" TextWrapping="Wrap" />
+            <StackPanel Grid.Row="2" Spacing="4">
+                <TextBlock x:Name="StatusText" Opacity="0.7" TextWrapping="Wrap" />
+                <HyperlinkButton x:Name="ClearTargetButton" Content="Retirer la cible du HUD"
+                                 Visibility="Collapsed" Padding="0" FontSize="12"
+                                 Click="ClearTarget_Click" />
+            </StackPanel>
 
             <ListView x:Name="SpotList" Grid.Row="3" SelectionMode="None" IsItemClickEnabled="False">
                 <ListView.ItemTemplate>
@@ -42,7 +47,7 @@
                                 <TextBlock Text="{x:Bind Detail}" Opacity="0.6" FontSize="11" />
                             </StackPanel>
                             <Button Grid.Column="1" Content="🎯" FontSize="13" Padding="8,4"
-                                    Click="Target_Click" Tag="{x:Bind}" />
+                                    Click="Target_Click" />
                         </Grid>
                     </DataTemplate>
                 </ListView.ItemTemplate>

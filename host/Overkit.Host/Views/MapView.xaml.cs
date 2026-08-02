@@ -234,9 +234,19 @@ public sealed partial class MapView : UserControl
 
     private void Target_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
-        if ((sender as Button)?.Tag is SpotRow row)
+        if ((sender as Microsoft.UI.Xaml.FrameworkElement)?.DataContext is not SpotRow row)
         {
-            TargetService.Set(row.SpeciesName, row.X, row.Y, row.Z);
+            return;
         }
+        TargetService.Set(row.SpeciesName, row.X, row.Y, row.Z);
+        StatusText.Text = $"🎯 {row.SpeciesName} ({row.Title}) envoyé au HUD — la distance suit tes déplacements.";
+        ClearTargetButton.Visibility = Microsoft.UI.Xaml.Visibility.Visible;
+    }
+
+    private void ClearTarget_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+    {
+        TargetService.Clear();
+        ClearTargetButton.Visibility = Microsoft.UI.Xaml.Visibility.Collapsed;
+        StatusText.Text = "Cible retirée du HUD.";
     }
 }

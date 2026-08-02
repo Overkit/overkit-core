@@ -1,0 +1,68 @@
+OVERKIT - END USER LICENSE AGREEMENT / CONTRAT DE LICENCE UTILISATEUR
+Copyright (c) 2026 Nallraen. All rights reserved. / Tous droits reserves.
+
+=== ENGLISH ===
+
+1. GRANT. Overkit is provided free of charge for personal, non-commercial
+   use. This package contains compiled binaries only.
+
+2. RESTRICTIONS. Without prior written permission, it is not allowed to:
+   - redistribute this package or any of its files, modified or not, outside
+     of a link to the official download page
+     (https://github.com/Overkit/overkit/releases);
+   - decompile, disassemble or reverse engineer the binaries, except where
+     applicable law expressly permits it;
+   - sell, rent or bundle Overkit, in whole or in part, into a paid product.
+
+3. ALPHA SOFTWARE - NO WARRANTY. Overkit is alpha software provided "AS IS",
+   without warranty of any kind. Use at your own risk. In no event shall the
+   author be liable for any damage, data loss or account issue arising from
+   its use.
+
+4. GAME DATA. Overkit reads the game's state locally and never writes to it.
+   Dataset files are transformed data derived from Palworld, (c) Pocketpair,
+   distributed like community wikis do, and removable on request. Overkit is
+   a fan project, not affiliated with Pocketpair.
+
+5. THIRD-PARTY COMPONENTS. This package embeds the .NET runtime and the
+   Windows App SDK (Microsoft), redistributed under their respective
+   licenses. Overkit is designed to work alongside UE4SS (MIT license,
+   https://github.com/UE4SS-RE/RE-UE4SS), which is not included in this
+   package.
+
+6. ECOSYSTEM. The upcoming add-on ecosystem (SDK, modules, cards) will be
+   published under its own open-source licenses.
+
+=== FRANCAIS ===
+
+1. CONCESSION. Overkit est fourni gratuitement pour un usage personnel et
+   non commercial. Ce paquet contient uniquement des binaires compiles.
+
+2. RESTRICTIONS. Sans autorisation ecrite prealable, il n'est pas permis de :
+   - redistribuer ce paquet ou l'un de ses fichiers, modifies ou non,
+     autrement que par un lien vers la page de telechargement officielle
+     (https://github.com/Overkit/overkit/releases) ;
+   - decompiler, desassembler ou retro-analyser les binaires, sauf dans les
+     cas expressement autorises par la loi applicable ;
+   - vendre, louer ou integrer Overkit, en tout ou partie, dans un produit
+     payant.
+
+3. LOGICIEL ALPHA - SANS GARANTIE. Overkit est un logiciel alpha fourni
+   « EN L'ETAT », sans garantie d'aucune sorte. Utilisation aux risques de
+   l'utilisateur. L'auteur ne saurait etre tenu responsable d'aucun dommage,
+   perte de donnees ou probleme de compte lie a son utilisation.
+
+4. DONNEES DU JEU. Overkit lit l'etat du jeu localement et n'y ecrit jamais.
+   Les fichiers de dataset sont des donnees transformees derivees de
+   Palworld, (c) Pocketpair, distribuees comme le font les wikis
+   communautaires, et retirables sur demande. Overkit est un projet de fans,
+   sans affiliation avec Pocketpair.
+
+5. COMPOSANTS TIERS. Ce paquet embarque le runtime .NET et le Windows App
+   SDK (Microsoft), redistribues selon leurs licences respectives. Overkit
+   est concu pour fonctionner aux cotes d'UE4SS (licence MIT,
+   https://github.com/UE4SS-RE/RE-UE4SS), qui n'est pas inclus dans ce
+   paquet.
+
+6. ECOSYSTEME. Le futur ecosysteme d'add-ons (SDK, modules, cards) sera
+   publie sous ses propres licences open source.

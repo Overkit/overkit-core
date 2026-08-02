@@ -209,6 +209,13 @@ public sealed class HudWindow : Form
         {
             info.Add($"équipe {party.Member_instance_ids.Count}");
         }
+        // Cible de farm (module Routing) : distance recalculée en continu.
+        if (Overkit.Host.Modules.TargetService.Current is { } target &&
+            snapshot.Player is { Status: FieldStatus.Ok, Position: { } pp })
+        {
+            var meters = Math.Sqrt(Math.Pow(target.X - pp.X, 2) + Math.Pow(target.Y - pp.Y, 2)) / 100.0;
+            info.Add($"🎯 {target.Name} {meters:N0} m");
+        }
         if (info.Count > 0)
         {
             parts.Add(string.Join("   ", info));

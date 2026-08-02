@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/host/">
     <Project Path="host/Overkit.Contracts/Overkit.Contracts.csproj" />
+    <Project Path="host/Overkit.Host/Overkit.Host.csproj" />
   </Folder>
   <Folder Name="/host/spikes/">
     <Project Path="host/spikes/HudSpike/HudSpike.csproj" />

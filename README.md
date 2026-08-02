@@ -37,7 +37,7 @@ overkit/
 
 - [ ] Schéma State Bus v1 (JSON Schema → génération types C#, EXG-020)
 - [ ] Sonde : collecteurs `player`, `world`, `palbox`, `inventory`, `base`, `nearby` + `mapping.json` + statuts
-- [ ] Host : State Bus, reconnexion, mode statique, chargeur de dataset, HUD + panneau, settings, hotkeys
+- [~] Host : State Bus ✓, connexion Sonde typée + reconnexion ✓, mode statique ✓, HUD ✓, calibration depuis le dataset ✓, settings ✓, hotkey ✓ — reste : panneau WinUI 3, chargeur de dataset complet
 - [ ] Dumper v1 + premier dataset publié
 - Critère de sortie : EXG-003, 010, 011, 013, 030 verts ; la Palbox du joueur s'affiche dans le panneau en live
 

@@ -27,7 +27,7 @@
       "required": ["type", "t_ms"],
       "properties": {
         "type": { "const": "state" },
-        "t_ms": { "type": "integer", "description": "Horloge monotone de la Sonde en millisecondes (pas une heure calendaire)" },
+        "t_ms": { "type": "integer", "format": "int64", "description": "Horloge monotone de la Sonde en millisecondes (pas une heure calendaire)" },
         "player": { "$ref": "#/definitions/Player" },
         "world": { "$ref": "#/definitions/World" },
         "inventory": { "$ref": "#/definitions/Inventory" },
@@ -96,7 +96,7 @@
       "required": ["status"],
       "properties": {
         "status": { "$ref": "#/definitions/FieldStatus" },
-        "ticks": { "type": "integer", "description": "GameDateTime.Ticks, unités de 100 ns (mapping validé : PalGameStateInGame.WorldTime)" },
+        "ticks": { "type": "integer", "format": "int64", "description": "GameDateTime.Ticks, unités de 100 ns (mapping validé : PalGameStateInGame.WorldTime)" },
         "day": { "type": "integer" },
         "hour": { "type": "integer", "minimum": 0, "maximum": 23 },
         "minute": { "type": "integer", "minimum": 0, "maximum": 59 },

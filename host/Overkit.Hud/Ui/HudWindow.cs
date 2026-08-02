@@ -205,6 +205,10 @@ public sealed class HudWindow : Form
                 ? $"{palbox.Pals.Count}/{palbox.Owned_count} pals*"
                 : $"{palbox.Pals.Count} pals");
         }
+        if (snapshot.Party is { Status: FieldStatus.Ok, Member_instance_ids.Count: > 0 } party)
+        {
+            info.Add($"équipe {party.Member_instance_ids.Count}");
+        }
         if (info.Count > 0)
         {
             parts.Add(string.Join("   ", info));

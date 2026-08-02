@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 
 namespace Overkit.Host.Ui;
 
-internal static class NativeMethods
+public static class NativeMethods
 {
     public const int GWL_EXSTYLE = -20;
 

@@ -316,7 +316,7 @@ namespace Overkit.Contracts
         public System.Collections.Generic.ICollection<string>? Passives { get; set; } = default!;
 
         /// <summary>
-        /// IVs 0-100 (donnée non visible en jeu — assumé et documenté, cf. R6)
+        /// IVs 0-100 (donnée non visible en jeu — assumé et documenté, cf. R6). Mapping validé : SaveParameter.Talent_HP/Melee/Shot/Defense
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("talents")]
         public Talents? Talents { get; set; } = default!;
@@ -507,8 +507,11 @@ namespace Overkit.Contracts
         [System.Text.Json.Serialization.JsonPropertyName("hp")]
         public int? Hp { get; set; } = default!;
 
-        [System.Text.Json.Serialization.JsonPropertyName("attack")]
-        public int? Attack { get; set; } = default!;
+        [System.Text.Json.Serialization.JsonPropertyName("melee")]
+        public int? Melee { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("shot")]
+        public int? Shot { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("defense")]
         public int? Defense { get; set; } = default!;

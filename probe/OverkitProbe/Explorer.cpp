@@ -29,6 +29,48 @@ namespace
     {
         Output::send<LogLevel::Verbose>(STR("[OverkitExplore] {}\n"), line);
     }
+
+    // Description courte d'une valeur simple/objet ; vide pour les types
+    // composites (gérés par récursion).
+    auto format_leaf(Unreal::FProperty* property, void* container) -> std::wstring
+    {
+        const auto type_name = property->GetClass().GetName();
+        if (type_name == STR("IntProperty"))
+        {
+            return std::to_wstring(*property->ContainerPtrToValuePtr<std::int32_t>(container));
+        }
+        if (type_name == STR("Int64Property"))
+        {
+            return std::to_wstring(*property->ContainerPtrToValuePtr<std::int64_t>(container));
+        }
+        if (type_name == STR("FloatProperty"))
+        {
+            return std::to_wstring(*property->ContainerPtrToValuePtr<float>(container));
+        }
+        if (type_name == STR("DoubleProperty"))
+        {
+            return std::to_wstring(*property->ContainerPtrToValuePtr<double>(container));
+        }
+        if (type_name == STR("ByteProperty") || type_name == STR("EnumProperty"))
+        {
+            return std::to_wstring(*property->ContainerPtrToValuePtr<std::uint8_t>(container));
+        }
+        if (type_name == STR("NameProperty"))
+        {
+            return property->ContainerPtrToValuePtr<Unreal::FName>(container)->ToString();
+        }
+        if (type_name == STR("StrProperty"))
+        {
+            const auto& chars = property->ContainerPtrToValuePtr<Unreal::FString>(container)->GetCharArray();
+            return L"\"" + std::wstring(chars.Num() > 0 ? chars.GetData() : L"") + L"\"";
+        }
+        if (type_name == STR("ObjectProperty"))
+        {
+            auto* value = *property->ContainerPtrToValuePtr<Unreal::UObject*>(container);
+            return value ? value->GetClassPrivate()->GetName() + L" '" + value->GetName() + L"'" : L"null";
+        }
+        return {};
+    }
 }
 
 namespace Overkit
@@ -181,6 +223,54 @@ namespace Overkit
                         log_line(indent + L"  [" + std::to_wstring(i) + L"] " +
                                  (element ? element->GetClassPrivate()->GetName() + L" '" + element->GetName() + L"'"
                                           : L"null"));
+                    }
+                }
+                continue;
+            }
+
+            else if (type_name == STR("MapProperty"))
+            {
+                auto* map_property = static_cast<Unreal::FMapProperty*>(property);
+                auto* key_prop = map_property->GetKeyProp();
+                auto* value_prop = map_property->GetValueProp();
+                auto& layout = map_property->GetMapLayout();
+                auto* map = property->ContainerPtrToValuePtr<Unreal::FScriptMap>(container);
+
+                line += L" <" + key_prop->GetClass().GetName() + L"," + value_prop->GetClass().GetName() +
+                        L"> n=" + std::to_wstring(map->Num());
+                log_line(line);
+
+                if (depth < MaxDepth)
+                {
+                    int shown = 0;
+                    for (std::int32_t i = 0; i < map->GetMaxIndex() && shown < MaxArrayPreview; ++i)
+                    {
+                        if (!map->IsValidIndex(i))
+                        {
+                            continue;
+                        }
+                        ++shown;
+                        void* pair = map->GetData(i, layout);
+
+                        const auto key_leaf = format_leaf(key_prop, pair);
+                        log_line(indent + L"  cle[" + std::to_wstring(i) + L"] = " +
+                                 (key_leaf.empty() ? L"(" + key_prop->GetClass().GetName() + L")" : key_leaf));
+                        if (key_leaf.empty() && key_prop->GetClass().GetName() == STR("StructProperty"))
+                        {
+                            auto key_struct = static_cast<Unreal::FStructProperty*>(key_prop)->GetStruct();
+                            dump_properties(key_struct.Get(), key_prop->ContainerPtrToValuePtr<void>(pair),
+                                            indent + L"    ", depth + 1);
+                        }
+
+                        const auto value_leaf = format_leaf(value_prop, pair);
+                        log_line(indent + L"  val[" + std::to_wstring(i) + L"] = " +
+                                 (value_leaf.empty() ? L"(" + value_prop->GetClass().GetName() + L")" : value_leaf));
+                        if (value_leaf.empty() && value_prop->GetClass().GetName() == STR("StructProperty"))
+                        {
+                            auto value_struct = static_cast<Unreal::FStructProperty*>(value_prop)->GetStruct();
+                            dump_properties(value_struct.Get(), value_prop->ContainerPtrToValuePtr<void>(pair),
+                                            indent + L"    ", depth + 1);
+                        }
                     }
                 }
                 continue;

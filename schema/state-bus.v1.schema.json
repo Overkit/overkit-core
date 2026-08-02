@@ -148,10 +148,11 @@
         "passives": { "type": "array", "items": { "type": "string" }, "description": "Identifiants bruts, libellés via refdata" },
         "talents": {
           "type": "object",
-          "description": "IVs 0-100 (donnée non visible en jeu — assumé et documenté, cf. R6)",
+          "description": "IVs 0-100 (donnée non visible en jeu — assumé et documenté, cf. R6). Mapping validé : SaveParameter.Talent_HP/Melee/Shot/Defense",
           "properties": {
             "hp": { "type": "integer" },
-            "attack": { "type": "integer" },
+            "melee": { "type": "integer" },
+            "shot": { "type": "integer" },
             "defense": { "type": "integer" }
           },
           "additionalProperties": false

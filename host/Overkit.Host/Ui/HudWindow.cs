@@ -233,6 +233,11 @@ public sealed class HudWindow : Form
             lines.Add($"jour {time.Day} — {time.Hour:00}:{time.Minute:00}");
         }
 
+        if (snapshot.Palbox is { Status: FieldStatus.Ok, Pals: not null } palbox)
+        {
+            lines.Add($"palbox : {palbox.Pals.Count} Pals");
+        }
+
         if (snapshot.Player is { Status: FieldStatus.Ok, Position: not null } player)
         {
             var p = player.Position;

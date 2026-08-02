@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/host/">
+    <Project Path="host/Overkit.Contracts/Overkit.Contracts.csproj" />
+  </Folder>
+  <Folder Name="/host/spikes/">
+    <Project Path="host/spikes/HudSpike/HudSpike.csproj" />
+  </Folder>
+  <Folder Name="/schema/" />
+  <Folder Name="/schema/generator/">
+    <Project Path="schema/generator/Overkit.SchemaGenerator.csproj" />
+  </Folder>
+</Solution>

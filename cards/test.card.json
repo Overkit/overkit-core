@@ -1,0 +1,52 @@
+{
+  "id": "com.overkit.test",
+  "name": "Test",
+  "version": "1.0.0",
+  "authors": ["Nallraen"],
+  "license": "MIT",
+  "state_requires": ["palbox"],
+  "min_schema": "1.0",
+
+  "sections": [
+    {
+      "type": "counters",
+      "items": [
+        { "label": "Pals Dans mon Inventory", "value": "count(palbox.pals)" },
+        { "label": "Mâles", "value": "count(palbox.pals | where(gender = \"male\"))" },
+        { "label": "Femelles", "value": "count(palbox.pals | where(gender = \"female\"))" },
+        { "label": "PV (talent moyen)", "value": "round(palbox.pals | avg(talents.hp))" }
+      ]
+    },
+    {
+      "type": "alert",
+      "when": "palbox.status = \"degraded\"",
+      "level": "info",
+      "title": "Palbox partiellement synchronisée",
+      "detail": "{count(palbox.pals)} Pals lus sur {palbox.owned_count} — ouvre ta boîte en jeu pour compléter et fissa!"
+    },
+    {
+      "type": "alert",
+      "for_each": true,
+      "source": "bases.list",
+      "when": "count(workers | where(percent(sanity.current, sanity.max) < 30)) > 0",
+      "level": "warning",
+      "title": "Base en souffrance",
+      "detail": "{count(workers | where(percent(sanity.current, sanity.max) < 30))} travailleur(s) sous 30 % de santé mentale"
+    },
+    {
+      "type": "list",
+      "text": "Pals de haut niveau",
+      "source": "palbox.pals | where(level >= 40)",
+      "sort_by": "level",
+      "sort_desc": true,
+      "limit": 15,
+      "empty_text": "Aucun Pal de niveau 40 ou plus pour l'instant.",
+      "columns": [
+        { "header": "PAL", "value": "if(isset(nickname) and nickname != \"\", nickname, species_id)" },
+        { "header": "NIVEAU", "value": "level" },
+        { "header": "GENRE", "value": "gender" },
+        { "header": "TALENTS", "value": "concat(talents.hp, \" / \", talents.melee, \" / \", talents.shot, \" / \", talents.defense)" }
+      ]
+    }
+  ]
+}

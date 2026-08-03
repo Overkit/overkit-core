@@ -60,7 +60,12 @@ public partial class App : Application
         loader.LoadAll(Path.Combine(AppContext.BaseDirectory, "Modules"));
         _bus.SnapshotUpdated += loader.Dispatch;
 
-        _panel = new PanelWindow(_bus, refData, loader);
+        // Cards (§5.1) : add-ons déclaratifs, un fichier JSON chacun.
+        var cards = new Overkit.Host.Cards.CardLoader(Log);
+        cards.LoadAll(Path.Combine(AppContext.BaseDirectory, "Cards"));
+        _bus.SnapshotUpdated += cards.Dispatch;
+
+        _panel = new PanelWindow(_bus, refData, loader, cards);
 
         var hudThread = new Thread(() =>
         {

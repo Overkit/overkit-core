@@ -14,9 +14,7 @@ namespace Overkit.Host.Views;
 /// </summary>
 public sealed partial class ModuleHostView : UserControl
 {
-    private StateBus _bus = null!;
-    private ModuleLoader _loader = null!;
-    private LoadedModule _module = null!;
+    private Func<ModuleView> _build = null!;
     private DateTime _lastRender = DateTime.MinValue;
 
     public ModuleHostView()
@@ -24,14 +22,20 @@ public sealed partial class ModuleHostView : UserControl
         InitializeComponent();
     }
 
-    public void Initialize(StateBus bus, ModuleLoader loader, LoadedModule module)
+    /// <summary>Vue d'un module chargé dynamiquement.</summary>
+    public void Initialize(StateBus bus, ModuleLoader loader, LoadedModule module) =>
+        Initialize(bus, () => loader.BuildView(module));
+
+    /// <summary>
+    /// Vue de toute source déclarative — module C# ou Card. Les deux
+    /// produisent le même modèle, donc le même rendu (ADR-0007).
+    /// </summary>
+    public void Initialize(StateBus bus, Func<ModuleView> build)
     {
-        _bus = bus;
-        _loader = loader;
-        _module = module;
+        _build = build;
 
         var dispatcher = DispatcherQueue;
-        _bus.SnapshotUpdated += _ =>
+        bus.SnapshotUpdated += _ =>
         {
             // Les modules décident de leur contenu ; on limite le rafraîchissement
             // de l'UI à 2 Hz pour rester léger.
@@ -47,7 +51,7 @@ public sealed partial class ModuleHostView : UserControl
 
     private void Render()
     {
-        var view = _loader.BuildView(_module);
+        var view = _build();
         Root.Children.Clear();
 
         foreach (var section in view.Sections)

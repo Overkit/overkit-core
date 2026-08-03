@@ -1,6 +1,7 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
+using Overkit.Host.Cards;
 using Overkit.Host.Core;
 using Overkit.Host.Views;
 using Overkit.Sdk;
@@ -18,7 +19,7 @@ public sealed partial class PanelWindow : Window
 {
     private readonly Dictionary<string, UIElement> _pages = new(StringComparer.Ordinal);
 
-    public PanelWindow(StateBus bus, RefData refData, ModuleLoader loader)
+    public PanelWindow(StateBus bus, RefData refData, ModuleLoader loader, CardLoader cards)
     {
         InitializeComponent();
 
@@ -48,6 +49,27 @@ public sealed partial class PanelWindow : Window
         _pages["map"] = Map;
 
         AddModuleTabs(bus, loader);
+        AddCardTabs(bus, cards);
+    }
+
+    /// <summary>Un onglet par Card chargée — même rendu que les modules.</summary>
+    private void AddCardTabs(StateBus bus, CardLoader cards)
+    {
+        foreach (var card in cards.Cards)
+        {
+            var view = new ModuleHostView { Visibility = Visibility.Collapsed };
+            view.Initialize(bus, card.BuildView);
+
+            var tag = "card:" + card.Definition.Id;
+            _pages[tag] = view;
+            Pages.Children.Add(view);
+
+            Nav.MenuItems.Add(new NavigationViewItem
+            {
+                Content = card.Definition.Name,
+                Tag = tag,
+            });
+        }
     }
 
     /// <summary>Un onglet par module chargé, inséré après la Palbox.</summary>

@@ -1,0 +1,9 @@
+<UserControl
+    x:Class="Overkit.Host.Views.ModuleHostView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ScrollViewer>
+        <StackPanel x:Name="Root" Spacing="12" />
+    </ScrollViewer>
+</UserControl>

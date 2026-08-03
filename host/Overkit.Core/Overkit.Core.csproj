@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Overkit.Contracts\Overkit.Contracts.csproj" />
+    <ProjectReference Include="..\..\sdk\Overkit.Sdk\Overkit.Sdk.csproj" />
   </ItemGroup>
 
 </Project>

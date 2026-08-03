@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <PackageId>Overkit.Sdk</PackageId>
+    <Version>0.1.0-alpha</Version>
+    <Authors>Nallraen</Authors>
+    <Description>SDK for building Overkit modules — the all-in-one Palworld overlay. Read-only access to the live game state through an immutable snapshot.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/Overkit/overkit</PackageProjectUrl>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\host\Overkit.Contracts\Overkit.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,3 +1,4 @@
+using Overkit.Sdk;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Overkit.Host.Core;
@@ -53,7 +54,13 @@ public partial class App : Application
         // live automatique dès que la Sonde répond (EXG-011).
         _probe = new ProbeConnection(new Uri(settings.ProbeUri), _bus, Log);
 
-        _panel = new PanelWindow(_bus, refData);
+        // Modules tiers (§5.3) : chargés depuis Modules/ à côté de l'exécutable,
+        // isolés, et alimentés par le bus comme les vues intégrées.
+        var loader = new ModuleLoader(refData, Log);
+        loader.LoadAll(Path.Combine(AppContext.BaseDirectory, "Modules"));
+        _bus.SnapshotUpdated += loader.Dispatch;
+
+        _panel = new PanelWindow(_bus, refData, loader);
 
         var hudThread = new Thread(() =>
         {

@@ -1,3 +1,4 @@
+using Overkit.Sdk;
 using Overkit.Contracts;
 
 namespace Overkit.Host.Core;

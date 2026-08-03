@@ -24,16 +24,14 @@
             Margin="0,0,0,10">
             <NavigationView.MenuItems>
                 <NavigationViewItem Content="Palbox" Tag="palbox" IsSelected="True" />
-                <NavigationViewItem Content="Audit de base" Tag="audit" />
                 <NavigationViewItem Content="Checklist de craft" Tag="craft" />
                 <NavigationViewItem Content="Accouplement" Tag="breeding" />
                 <NavigationViewItem Content="Carte" Tag="map" />
             </NavigationView.MenuItems>
         </NavigationView>
 
-        <Grid Grid.Row="2">
+        <Grid x:Name="Pages" Grid.Row="2">
             <views:PalboxView x:Name="Palbox" />
-            <views:AuditView x:Name="Audit" Visibility="Collapsed" />
             <views:CraftView x:Name="Craft" Visibility="Collapsed" />
             <views:BreedingView x:Name="Breeding" Visibility="Collapsed" />
             <views:MapView x:Name="Map" Visibility="Collapsed" />

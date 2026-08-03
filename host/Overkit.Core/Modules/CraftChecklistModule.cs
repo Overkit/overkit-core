@@ -1,3 +1,4 @@
+using Overkit.Sdk;
 using Overkit.Contracts;
 using Overkit.Host.Core;
 
@@ -36,7 +37,7 @@ public static class CraftChecklistModule
 
         var lines = new List<ChecklistLine>();
         var complete = true;
-        foreach (var (itemId, count) in recipe.Materials)
+        foreach (var (itemId, count) in recipe.Materials.Select(m => (m.ItemId, m.Count)))
         {
             var needed = count * quantity;
             var have = stock.GetValueOrDefault(itemId);

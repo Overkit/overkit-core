@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <!-- Un module ne redistribue jamais le SDK ni les contrats : le host les
+         fournit au chargement. -->
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\sdk\Overkit.Sdk\Overkit.Sdk.csproj" Private="false" ExcludeAssets="runtime" />
+    <ProjectReference Include="..\..\host\Overkit.Contracts\Overkit.Contracts.csproj" Private="false" ExcludeAssets="runtime" />
+  </ItemGroup>
+
+</Project>

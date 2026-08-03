@@ -1,26 +1,16 @@
+using Overkit.Sdk;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
 namespace Overkit.Host.Core;
 
-public sealed record SpeciesInfo(string Id, string Name, int CombiRank, int ZukanIndex, string ZukanSuffix);
-
-public sealed record RecipeInfo(string Key, string ProductId, int ProductCount, double WorkAmount,
-                                IReadOnlyList<(string ItemId, int Count)> Materials);
-
-public sealed record SpecialCombo(string ParentA, int GenderA, string ParentB, int GenderB, string Child);
-
-public sealed record DropSource(string SpeciesId, double Rate, int Min, int Max);
-
-/// <summary>Emplacement de spawn d'une espèce (coordonnées monde, cm). OnlyTime : 0 = toujours, 1 = jour, 2 = nuit.</summary>
-public sealed record SpawnSpot(double X, double Y, double Z, double Radius, int OnlyTime, int LevelMin, int LevelMax);
-
 /// <summary>
 /// Données de référence du dataset (§2.4) : noms localisés, espèces (CombiRank,
 /// Zukan), recettes, sources de butin, combos d'accouplement. Chargées depuis
 /// le dataset (P6) ; absentes, repli sur identifiants aérés — jamais de crash.
+/// Implémente le contrat <see cref="IRefData"/> exposé aux modules.
 /// </summary>
-public sealed class RefData
+public sealed class RefData : IRefData
 {
     private readonly Dictionary<string, string> _speciesNames = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, string> _passiveNames = new(StringComparer.OrdinalIgnoreCase);
@@ -135,13 +125,13 @@ public sealed class RefData
         foreach (var entry in doc.RootElement.GetProperty("recipes").EnumerateObject())
         {
             var value = entry.Value;
-            var materials = new List<(string, int)>();
+            var materials = new List<RecipeMaterial>();
             if (value.TryGetProperty("materials", out var mats))
             {
                 foreach (var material in mats.EnumerateArray())
                 {
-                    materials.Add((material.GetProperty("item_id").GetString() ?? "",
-                                   material.GetProperty("count").GetInt32()));
+                    materials.Add(new RecipeMaterial(material.GetProperty("item_id").GetString() ?? "",
+                                                     material.GetProperty("count").GetInt32()));
                 }
             }
             _recipes.Add(new RecipeInfo(

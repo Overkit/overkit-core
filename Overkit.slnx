@@ -12,8 +12,14 @@
   <Folder Name="/host/spikes/">
     <Project Path="host/spikes/HudSpike/HudSpike.csproj" />
   </Folder>
+  <Folder Name="/modules/">
+    <Project Path="modules/Overkit.Module.BaseAudit/Overkit.Module.BaseAudit.csproj" />
+  </Folder>
   <Folder Name="/schema/" />
   <Folder Name="/schema/generator/">
     <Project Path="schema/generator/Overkit.SchemaGenerator.csproj" />
+  </Folder>
+  <Folder Name="/sdk/">
+    <Project Path="sdk/Overkit.Sdk/Overkit.Sdk.csproj" />
   </Folder>
 </Solution>

@@ -31,7 +31,7 @@ Toute section accepte `when` : elle n'apparaît que si l'expression est vraie.
 
 ## Le langage d'expressions
 
-Volontairement limité : pas de boucle, pas d'appel système, pas d'accès disque ou réseau. Chaque rendu dispose d'un budget de 2 ms et de 20 000 éléments parcourus ; au-delà, la Card est suspendue avec un message plutôt que de ralentir le jeu.
+Volontairement limité : pas de boucle, pas d'appel système, pas d'accès disque ou réseau. Chaque rendu dispose d'un budget de temps et un plafond d'éléments parcourus ; au-delà, la Card est suspendue avec un message plutôt que de ralentir le jeu.
 
 **Chemins** — les domaines du State Bus, en minuscules avec des points :
 

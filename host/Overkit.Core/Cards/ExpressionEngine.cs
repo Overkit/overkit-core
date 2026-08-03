@@ -29,16 +29,29 @@ public sealed class ExpressionException(string message) : Exception(message);
 /// </summary>
 public static class ExpressionEngine
 {
-    public const int MaxItemsScanned = 20_000;
-    public static readonly TimeSpan Budget = TimeSpan.FromMilliseconds(2);
+    /// <summary>
+    /// Plafonds d'un rendu complet de Card (toutes sections confondues). Le
+    /// rendu est déjà limité à 2 Hz par l'UI : ces bornes protègent contre une
+    /// expression pathologique, pas contre un usage normal.
+    /// </summary>
+    public const int MaxItemsScanned = 200_000;
+
+    public static readonly TimeSpan Budget = TimeSpan.FromMilliseconds(50);
+
+    // Les expressions sont analysées une seule fois : sans ce cache, une liste
+    // de N lignes × C colonnes relance N×C analyses syntaxiques par rendu.
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, Node> AstCache = new();
 
     public static object? Evaluate(string expression, object? root, EvaluationContext? context = null)
     {
         var ctx = context ?? new EvaluationContext();
-        var tokens = Tokenizer.Tokenize(expression);
-        var parser = new Parser(tokens);
-        var node = parser.ParseExpression();
-        parser.ExpectEnd();
+        var node = AstCache.GetOrAdd(expression, static text =>
+        {
+            var parser = new Parser(Tokenizer.Tokenize(text));
+            var parsed = parser.ParseExpression();
+            parser.ExpectEnd();
+            return parsed;
+        });
         return node.Evaluate(new Scope(root, root, ctx));
     }
 
@@ -53,11 +66,17 @@ public static class ExpressionEngine
             _scanned += items;
             if (_scanned > MaxItemsScanned)
             {
-                throw new ExpressionException($"budget dépassé : plus de {MaxItemsScanned} éléments parcourus");
+                throw new ExpressionException(
+                    $"trop de données parcourues ({MaxItemsScanned:N0} éléments) — restreins la source avec un filtre " +
+                    "(where) ou une limite");
             }
-            if (_stopwatch.Elapsed > Budget)
+            // Le temps ne se vérifie pas à chaque élément : l'horloge coûte
+            // plus cher que le travail utile sur de petites collections.
+            if ((_scanned & 0x3FF) == 0 && _stopwatch.Elapsed > Budget)
             {
-                throw new ExpressionException($"budget dépassé : évaluation de plus de {Budget.TotalMilliseconds} ms");
+                throw new ExpressionException(
+                    $"évaluation trop longue (plus de {Budget.TotalMilliseconds:N0} ms) — simplifie les expressions " +
+                    "ou réduis la taille des listes");
             }
         }
     }

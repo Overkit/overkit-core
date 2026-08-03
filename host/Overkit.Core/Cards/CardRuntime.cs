@@ -13,6 +13,13 @@ namespace Overkit.Host.Cards;
 public sealed class CardRuntime(CardDefinition definition, string sourcePath)
 {
     private GameStateSnapshot _snapshot = GameStateSnapshot.Empty;
+    private DateTime _suspendedAt;
+    private int _consecutiveFailures;
+
+    /// <summary>Une suspension peut venir d'un pic passager : on retente, puis on abandonne.</summary>
+    private static readonly TimeSpan RetryDelay = TimeSpan.FromSeconds(10);
+
+    private const int MaxConsecutiveFailures = 3;
 
     public CardDefinition Definition => definition;
     public string SourcePath => sourcePath;
@@ -25,7 +32,15 @@ public sealed class CardRuntime(CardDefinition definition, string sourcePath)
     {
         if (Suspended)
         {
-            return new ModuleView(definition.Name, [new EmptySection($"Card suspendue : {SuspendReason}")]);
+            // Reprise automatique après un délai, sauf échecs répétés.
+            if (_consecutiveFailures >= MaxConsecutiveFailures || DateTime.UtcNow - _suspendedAt < RetryDelay)
+            {
+                var suffix = _consecutiveFailures >= MaxConsecutiveFailures
+                    ? " (abandon après plusieurs tentatives — corrige la Card puis relance Overkit)"
+                    : " — nouvelle tentative dans quelques secondes";
+                return new ModuleView(definition.Name, [new EmptySection($"Card suspendue : {SuspendReason}{suffix}")]);
+            }
+            Suspended = false;
         }
 
         var snapshot = _snapshot;
@@ -45,33 +60,39 @@ public sealed class CardRuntime(CardDefinition definition, string sourcePath)
         var context = new ExpressionEngine.EvaluationContext();
         var sections = new List<ViewSection>();
 
+        var index = 0;
         try
         {
             foreach (var section in definition.Sections)
             {
+                index++;
                 var built = BuildSection(section, snapshot, context);
                 if (built is not null)
                 {
                     sections.Add(built);
                 }
             }
-        }
-        catch (ExpressionException ex)
-        {
-            Suspended = true;
-            SuspendReason = ex.Message;
-            return new ModuleView(definition.Name, [new EmptySection($"Card suspendue : {ex.Message}")]);
+            _consecutiveFailures = 0;
         }
         catch (Exception ex)
         {
-            Suspended = true;
-            SuspendReason = ex.GetBaseException().Message;
+            var reason = ex.GetBaseException().Message;
+            var faulty = definition.Sections.ElementAtOrDefault(index - 1);
+            Suspend($"section {index} ({faulty?.Type ?? "?"}) : {reason}");
             return new ModuleView(definition.Name, [new EmptySection($"Card suspendue : {SuspendReason}")]);
         }
 
         return sections.Count == 0
             ? new ModuleView(definition.Name, [new EmptySection("Rien à afficher pour l'instant.")])
             : new ModuleView(definition.Name, sections);
+    }
+
+    private void Suspend(string reason)
+    {
+        Suspended = true;
+        SuspendReason = reason;
+        _suspendedAt = DateTime.UtcNow;
+        _consecutiveFailures++;
     }
 
     private ViewSection? BuildSection(CardSection section, GameStateSnapshot snapshot,

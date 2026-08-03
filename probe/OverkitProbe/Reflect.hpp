@@ -6,6 +6,7 @@
 #include <format>
 #include <initializer_list>
 #include <string>
+#include <vector>
 
 #include <Unreal/UObjectGlobals.hpp>
 #include <Unreal/UObject.hpp>
@@ -55,6 +56,24 @@ namespace Overkit::Reflect
     {
         auto** value = owner->GetValuePtrByPropertyNameInChain<U::UObject*>(property_name);
         return value ? *value : nullptr;
+    }
+
+    // Le jeu garde parfois plusieurs instances d'une même classe, dont des
+    // coquilles vides (ex. deux PalPlayerState, un seul avec sa PalStorage).
+    // FindFirstOf n'a aucune raison de tomber sur la bonne : on cherche la
+    // première instance dont la propriété attendue est renseignée.
+    inline auto find_first_with(const wchar_t* class_name, const wchar_t* property_name) -> U::UObject*
+    {
+        std::vector<U::UObject*> instances{};
+        U::UObjectGlobals::FindAllOf(class_name, instances);
+        for (auto* instance : instances)
+        {
+            if (instance && read_object(instance, property_name))
+            {
+                return instance;
+            }
+        }
+        return nullptr;
     }
 
     // Résout un chemin de structs imbriquées par noms et retourne le pointeur

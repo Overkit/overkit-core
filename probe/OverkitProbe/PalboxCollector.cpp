@@ -263,7 +263,9 @@ namespace
     // Conteneur de l'équipe active : PalOtomoHolderComponentBase.CharacterContainer.
     auto find_party_container() -> Unreal::UObject*
     {
-        auto* holder = Unreal::UObjectGlobals::FindFirstOf(OVKM("class.otomo_holder", "PalOtomoHolderComponentBase"));
+        auto* holder = Overkit::Reflect::find_first_with(
+            OVKM("class.otomo_holder", "PalOtomoHolderComponentBase"),
+            OVKM("prop.character_container", "CharacterContainer"));
         return holder ? read_object(holder, OVKM("prop.character_container", "CharacterContainer")) : nullptr;
     }
 
@@ -400,7 +402,8 @@ namespace Overkit
 
         try
         {
-            auto* player_state = Unreal::UObjectGlobals::FindFirstOf(OVKM("class.player_state", "PalPlayerState"));
+            auto* player_state = Overkit::Reflect::find_first_with(
+                OVKM("class.player_state", "PalPlayerState"), OVKM("prop.pal_storage", "PalStorage"));
             if (!player_state)
             {
                 return true;

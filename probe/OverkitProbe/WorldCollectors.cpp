@@ -175,7 +175,8 @@ namespace Overkit::WorldCollectors
     {
         try
         {
-            auto* player_state = Unreal::UObjectGlobals::FindFirstOf(OVKM("class.player_state", "PalPlayerState"));
+            auto* player_state = find_first_with(OVKM("class.player_state", "PalPlayerState"),
+                                                 OVKM("prop.inventory_data", "InventoryData"));
             auto* inventory_data = player_state ? read_object(player_state, OVKM("prop.inventory_data", "InventoryData")) : nullptr;
             if (!inventory_data)
             {

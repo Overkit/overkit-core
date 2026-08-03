@@ -22,7 +22,7 @@ using namespace RC;
 
 // Version de la Sonde — source unique, reprise par ModVersion, le log et le
 // handshake. Règle : mineure = fonctionnalité, patch = modification.
-#define OVERKIT_PROBE_VERSION "0.6.2"
+#define OVERKIT_PROBE_VERSION "0.6.3"
 
 namespace
 {

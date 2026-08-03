@@ -33,6 +33,16 @@ overkit/
 
 ## État d'avancement
 
+**Phase 3 — API, SDK et Cards** (en cours depuis le 03/08/2026)
+
+- [x] `Overkit.Sdk` : `IOverkitModule`, manifeste, `IRefData`, snapshot immuable, vues déclaratives (ADR-0007)
+- [x] Chargeur de modules : `AssemblyLoadContext` collectible, compatibilité vérifiée avec raison affichée (EXG-070), panne d'un module isolée (EXG-060)
+- [x] **Critère de sortie partiel atteint** : un module compilé hors du host, déposé dans `Modules/`, se charge et s'affiche (`Overkit.Module.BaseAudit`)
+- [x] Moteur de Cards : interpréteur borné, sections déclaratives, un fichier JSON par Card (EXG-040, EXG-041) ; module Alertes livré en Card (§6.5) ; guide dans `docs/cards.md`
+- [ ] Éditeur de Cards in-game (créer une Card sans quitter le jeu, < 10 min pour un non-dev)
+- [ ] Template `dotnet new overkit-module` + package NuGet du SDK
+- [ ] Sections interactives (saisie, sélection) — le déclaratif v1 ne couvre que l'affichage, d'où les vues Palbox/Craft/Carte restées intégrées
+
 **Phase 2 — Modules fondateurs** (en cours depuis le 02/08/2026)
 
 - [x] Audit de base : alertes faim/santé mentale des travailleurs (validé sur données réelles)

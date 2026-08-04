@@ -14,6 +14,17 @@
         <ScrollViewer>
             <StackPanel Spacing="14">
 
+                <Grid ColumnSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <ComboBox x:Name="EditTarget" Header="Card en cours" HorizontalAlignment="Stretch"
+                              SelectionChanged="EditTarget_Changed" />
+                    <Button x:Name="DeleteButton" Grid.Column="1" Content="Supprimer" Click="Delete_Click"
+                            VerticalAlignment="Bottom" Visibility="Collapsed" />
+                </Grid>
+
                 <TextBox x:Name="CardName" Header="Nom de ma card" PlaceholderText="Mes femelles de haut niveau" />
 
                 <Border Background="{ThemeResource SubtleFillColorSecondaryBrush}" CornerRadius="8" Padding="14">
@@ -119,8 +130,15 @@
                                Opacity="0.5" FontSize="12" />
                 </StackPanel>
 
-                <Button x:Name="SaveButton" Content="Enregistrer ma card" Click="Save_Click"
-                        HorizontalAlignment="Stretch" Style="{StaticResource AccentButtonStyle}" />
+                <Grid ColumnSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Button x:Name="SaveButton" Content="Enregistrer ma card" Click="Save_Click"
+                            HorizontalAlignment="Stretch" Style="{StaticResource AccentButtonStyle}" />
+                    <Button Grid.Column="1" Content="Tout effacer" Click="Reset_Click" />
+                </Grid>
                 <TextBlock x:Name="SaveStatus" Opacity="0.75" TextWrapping="Wrap" />
             </StackPanel>
         </ScrollViewer>

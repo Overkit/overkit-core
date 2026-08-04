@@ -57,15 +57,23 @@ public sealed partial class PanelWindow : Window
         AddModuleTabs(bus, loader);
         AddCardTabs(bus, cards);
 
-        // Une Card créée dans l'éditeur apparaît immédiatement comme onglet.
+        // L'éditeur agit à chaud : création, mise à jour et suppression se
+        // répercutent immédiatement sur les onglets.
         cards.CardSaved += (card, replaced) =>
             DispatcherQueue.TryEnqueue(() =>
             {
-                if (!replaced)
+                if (replaced)
+                {
+                    UpdateCardTab(card);
+                }
+                else
                 {
                     AddCardTab(card);
                 }
             });
+
+        cards.CardDeleted += card =>
+            DispatcherQueue.TryEnqueue(() => RemoveCardTab(card));
     }
 
     /// <summary>Un onglet par Card chargée — même rendu que les modules.</summary>
@@ -127,6 +135,42 @@ public sealed partial class PanelWindow : Window
                 ToolTipService.SetToolTip(item, module.Reason);
             }
             Nav.MenuItems.Insert(Math.Min(insertAt++, Nav.MenuItems.Count), item);
+        }
+    }
+
+    /// <summary>Card modifiée : la vue est reconstruite et l'onglet renommé si besoin.</summary>
+    private void UpdateCardTab(CardRuntime card)
+    {
+        var tag = "card:" + card.Definition.Id;
+        if (_pages.TryGetValue(tag, out var page) && page is ModuleHostView view)
+        {
+            view.Initialize(_bus, card.BuildView);
+        }
+        var item = Nav.MenuItems.OfType<NavigationViewItem>()
+            .FirstOrDefault(i => (i.Tag as string) == tag);
+        if (item is not null)
+        {
+            item.Content = card.Definition.Name;
+        }
+    }
+
+    private void RemoveCardTab(CardRuntime card)
+    {
+        var tag = "card:" + card.Definition.Id;
+        if (_pages.Remove(tag, out var page))
+        {
+            Pages.Children.Remove(page);
+        }
+        var item = Nav.MenuItems.OfType<NavigationViewItem>()
+            .FirstOrDefault(i => (i.Tag as string) == tag);
+        if (item is not null)
+        {
+            var wasSelected = ReferenceEquals(Nav.SelectedItem, item);
+            Nav.MenuItems.Remove(item);
+            if (wasSelected)
+            {
+                Nav.SelectedItem = Nav.MenuItems.OfType<NavigationViewItem>().FirstOrDefault();
+            }
         }
     }
 

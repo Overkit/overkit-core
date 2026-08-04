@@ -109,6 +109,27 @@ public static class CardBuilder
             .FirstOrDefault(s => haystack.Contains(s.Expression, StringComparison.OrdinalIgnoreCase))?.Domain;
     }
 
+    /// <summary>
+    /// Décrit une section existante en une ligne lisible, pour réafficher les
+    /// blocs quand on rouvre une Card dans l'éditeur.
+    /// </summary>
+    public static string Describe(CardSection section)
+    {
+        var source = CardFieldCatalog.Sources.FirstOrDefault(s =>
+            (section.Source ?? section.When ?? "").Contains(s.Expression, StringComparison.OrdinalIgnoreCase));
+        var among = source is null ? "" : $" — {source.Label}";
+
+        return section.Type.ToLowerInvariant() switch
+        {
+            "counters" => "Compteur — " + string.Join(", ", section.Items.Select(i => i.Label)),
+            "gauges" => "Jauges — " + string.Join(", ", section.Items.Select(i => i.Label)),
+            "list" => $"Liste{among} ({section.Columns.Count} colonne(s))",
+            "alert" => $"Alerte — {section.Title}",
+            "text" => $"Texte — {section.Text}",
+            _ => section.Type,
+        };
+    }
+
     public static string Serialize(CardDefinition card) =>
         JsonSerializer.Serialize(card, new JsonSerializerOptions
         {

@@ -50,6 +50,16 @@ public sealed partial class CardEditorView : UserControl
 
     private CardRuntime? _preview;
 
+    /// <summary>Card en cours de modification ; null = nouvelle card.</summary>
+    private CardRuntime? _editing;
+
+    private bool _suppressTargetChange;
+
+    private sealed record EditTargetItem(CardRuntime? Card, string Label)
+    {
+        public override string ToString() => Label;
+    }
+
     public CardEditorView()
     {
         InitializeComponent();
@@ -77,6 +87,104 @@ public sealed partial class CardEditorView : UserControl
         _cards = cards;
         _cardsDirectory = cardsDirectory;
         Preview.Initialize(bus, BuildPreview);
+        RefreshTargets();
+    }
+
+    /// <summary>Alimente le sélecteur : « Nouvelle card » + les cards existantes.</summary>
+    private void RefreshTargets()
+    {
+        _suppressTargetChange = true;
+        var items = new List<EditTargetItem> { new(null, "＋ Nouvelle card") };
+        items.AddRange(_cards.Cards.Select(c => new EditTargetItem(c, $"Modifier « {c.Definition.Name} »")));
+        EditTarget.ItemsSource = items;
+        EditTarget.SelectedIndex = _editing is null
+            ? 0
+            : Math.Max(0, items.FindIndex(i => ReferenceEquals(i.Card, _editing)));
+        _suppressTargetChange = false;
+        DeleteButton.Visibility = _editing is null ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    private void EditTarget_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_suppressTargetChange || EditTarget.SelectedItem is not EditTargetItem item)
+        {
+            return;
+        }
+        if (item.Card is null)
+        {
+            ResetEditor();
+        }
+        else
+        {
+            LoadForEditing(item.Card);
+        }
+    }
+
+    /// <summary>Ouvre une Card existante : nom et blocs sont réaffichés, prêts à être modifiés.</summary>
+    private void LoadForEditing(CardRuntime card)
+    {
+        _editing = card;
+        CardName.Text = card.Definition.Name;
+        _blocks.Clear();
+        foreach (var section in card.Definition.Sections)
+        {
+            _blocks.Add(new BlockChip(section, CardBuilder.Describe(section)));
+        }
+        _filters.Clear();
+        NoBlocks.Visibility = _blocks.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        DeleteButton.Visibility = Visibility.Visible;
+        SaveStatus.Text = $"Modification de « {card.Definition.Name} » — enregistre pour appliquer.";
+        RefreshPreview();
+    }
+
+    /// <summary>Repart d'une card vierge.</summary>
+    private void ResetEditor()
+    {
+        _editing = null;
+        CardName.Text = "";
+        BlockLabel.Text = "";
+        FilterValue.Text = "";
+        _blocks.Clear();
+        _filters.Clear();
+        _preview = null;
+        NoBlocks.Visibility = Visibility.Visible;
+        DeleteButton.Visibility = Visibility.Collapsed;
+        SaveStatus.Text = "";
+        RefreshTargets();
+    }
+
+    private void Reset_Click(object sender, RoutedEventArgs e) => ResetEditor();
+
+    private async void Delete_Click(object sender, RoutedEventArgs e)
+    {
+        if (_editing is null)
+        {
+            return;
+        }
+        var card = _editing;
+        var dialog = new ContentDialog
+        {
+            XamlRoot = XamlRoot,
+            Title = "Supprimer cette card ?",
+            Content = $"« {card.Definition.Name} » et son fichier seront supprimés. Cette action est définitive.",
+            PrimaryButtonText = "Supprimer",
+            CloseButtonText = "Annuler",
+            DefaultButton = ContentDialogButton.Close,
+        };
+        if (await dialog.ShowAsync() != ContentDialogResult.Primary)
+        {
+            return;
+        }
+
+        if (_cards.Delete(card))
+        {
+            ResetEditor();
+            SaveStatus.Text = $"« {card.Definition.Name} » supprimée.";
+        }
+        else
+        {
+            SaveStatus.Text = "Suppression impossible — le fichier est peut-être ouvert ailleurs.";
+        }
     }
 
     private string SelectedBlockType =>
@@ -240,8 +348,21 @@ public sealed partial class CardEditorView : UserControl
         try
         {
             var card = CardBuilder.BuildCard(name, _blocks.Select(b => b.Section), Environment.UserName);
+
+            // Modification : on conserve l'identifiant d'origine pour que la
+            // Card soit remplacée, et non dupliquée.
+            if (_editing is not null)
+            {
+                card.Id = _editing.Definition.Id;
+            }
+
+            var wasEditing = _editing is not null;
             _cards.SaveAndLoad(card, _cardsDirectory);
-            SaveStatus.Text = $"« {name} » enregistrée — son onglet est disponible tout de suite.";
+
+            ResetEditor();
+            SaveStatus.Text = wasEditing
+                ? $"« {name} » mise à jour."
+                : $"« {name} » enregistrée — son onglet est disponible tout de suite.";
         }
         catch (Exception ex)
         {

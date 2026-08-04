@@ -57,6 +57,30 @@ public sealed class CardLoader(Action<string> log)
     /// <summary>Signalé quand une Card est ajoutée ou remplacée à chaud (éditeur in-game).</summary>
     public event Action<CardRuntime, bool>? CardSaved;
 
+    /// <summary>Signalé quand une Card est supprimée depuis l'éditeur.</summary>
+    public event Action<CardRuntime>? CardDeleted;
+
+    /// <summary>Supprime la Card et son fichier. Retourne false si le fichier résiste.</summary>
+    public bool Delete(CardRuntime card)
+    {
+        try
+        {
+            if (!string.IsNullOrEmpty(card.SourcePath) && File.Exists(card.SourcePath))
+            {
+                File.Delete(card.SourcePath);
+            }
+            _cards.Remove(card);
+            log($"Card supprimée : {card.Definition.Name}");
+            CardDeleted?.Invoke(card);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            log($"Suppression impossible ({card.Definition.Name}) : {ex.GetBaseException().Message}");
+            return false;
+        }
+    }
+
     /// <summary>
     /// Écrit une Card dans le dossier et la charge immédiatement : l'éditeur
     /// in-game n'impose pas de redémarrage. Retourne l'exécution prête à
@@ -76,6 +100,21 @@ public sealed class CardLoader(Action<string> log)
         var replaced = existing >= 0;
         if (replaced)
         {
+            // Card renommée : le nom de fichier suit, l'ancien ne doit pas rester.
+            var previousPath = _cards[existing].SourcePath;
+            if (!string.IsNullOrEmpty(previousPath) &&
+                !string.Equals(previousPath, path, StringComparison.OrdinalIgnoreCase) &&
+                File.Exists(previousPath))
+            {
+                try
+                {
+                    File.Delete(previousPath);
+                }
+                catch (IOException)
+                {
+                    log($"Ancien fichier conservé : {Path.GetFileName(previousPath)}");
+                }
+            }
             _cards[existing] = runtime;
         }
         else

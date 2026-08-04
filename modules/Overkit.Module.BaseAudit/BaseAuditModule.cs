@@ -11,11 +11,33 @@ namespace Overkit.Module.BaseAudit;
 /// </summary>
 public sealed class BaseAuditModule : IOverkitModule
 {
-    private const double WarningThreshold = 50;
-    private const double CriticalThreshold = 25;
-
     private IModuleContext _context = null!;
     private GameStateSnapshot _snapshot = GameStateSnapshot.Empty;
+
+    // Réglages pilotés par les sections interactives. Ils ne vivent que dans le
+    // module : le host affiche les champs et renvoie la saisie, il ne conserve
+    // rien.
+    private double _warningThreshold = 50;
+    private bool _criticalOnly;
+    private string _baseFilter = AllBases;
+
+    private const string AllBases = "*";
+
+    public void OnInteraction(ViewInteraction interaction)
+    {
+        switch (interaction.Id)
+        {
+            case "threshold":
+                _warningThreshold = Math.Clamp(interaction.AsNumber(), 5, 100);
+                break;
+            case "critical-only":
+                _criticalOnly = interaction.AsBool();
+                break;
+            case "base":
+                _baseFilter = interaction.Value;
+                break;
+        }
+    }
 
     public ModuleManifest Manifest { get; } = new()
     {
@@ -59,9 +81,13 @@ public sealed class BaseAuditModule : IOverkitModule
             }
         }
 
+        var selected = bases
+            .Where(b => _baseFilter == AllBases || b.Base_id == _baseFilter)
+            .ToList();
+
         var alerts = new List<AlertItem>();
         var workers = 0;
-        foreach (var baseInfo in bases)
+        foreach (var baseInfo in selected)
         {
             if (baseInfo.Workers is null)
             {
@@ -76,13 +102,22 @@ public sealed class BaseAuditModule : IOverkitModule
             }
         }
 
+        if (_criticalOnly)
+        {
+            alerts.RemoveAll(a => a.Level != AlertLevel.Critical);
+        }
         alerts.Sort((a, b) => b.Level.CompareTo(a.Level));
+
+        var controls = BuildControls(bases);
 
         if (alerts.Count == 0)
         {
             return new ModuleView(Manifest.Name, [
-                new StatusSection($"{workers} travailleurs surveillés sur {bases.Count} base(s)"),
-                new EmptySection("Tout va bien : personne n'a faim ni ne déprime. ✓"),
+                new StatusSection($"{workers} travailleurs surveillés sur {selected.Count} base(s)"),
+                ..controls,
+                new EmptySection(_criticalOnly
+                    ? "Aucune alerte critique au seuil choisi. ✓"
+                    : "Tout va bien : personne n'a faim ni ne déprime. ✓"),
             ]);
         }
 
@@ -91,23 +126,40 @@ public sealed class BaseAuditModule : IOverkitModule
             new StatusSection(critical > 0
                 ? $"{alerts.Count} alertes dont {critical} critiques sur {workers} travailleurs"
                 : $"{alerts.Count} alertes sur {workers} travailleurs"),
+            ..controls,
             new AlertsSection(alerts),
         ]);
     }
 
-    private static void AddAlert(List<AlertItem> alerts, string palName, string gauge, Gauge? value)
+    /// <summary>
+    /// Champs de réglage. Ils décrivent l'état courant du module : le host les
+    /// réaffiche tels quels et renvoie la saisie à OnInteraction.
+    /// </summary>
+    private List<ViewSection> BuildControls(IEnumerable<BaseInfo> bases)
+    {
+        var options = new List<ChoiceOption> { new(AllBases, "Toutes les bases") };
+        options.AddRange(bases.Select((b, i) => new ChoiceOption(b.Base_id, $"Base {i + 1}")));
+
+        return [
+            new NumberInputSection("threshold", "Seuil d'alerte (%)", _warningThreshold, 5, 100, 5),
+            new ChoiceSection("base", "Base surveillée", options, _baseFilter),
+            new ToggleSection("critical-only", "Critiques seulement", _criticalOnly),
+        ];
+    }
+
+    private void AddAlert(List<AlertItem> alerts, string palName, string gauge, Gauge? value)
     {
         if (value is null || value.Max <= 0)
         {
             return;
         }
         var percent = value.Current / value.Max * 100.0;
-        if (percent >= WarningThreshold)
+        if (percent >= _warningThreshold)
         {
             return;
         }
         alerts.Add(new AlertItem(
-            percent < CriticalThreshold ? AlertLevel.Critical : AlertLevel.Warning,
+            percent < _warningThreshold / 2 ? AlertLevel.Critical : AlertLevel.Warning,
             palName,
             $"{gauge} à {percent:F0} % ({value.Current:F0}/{value.Max:F0})"));
     }

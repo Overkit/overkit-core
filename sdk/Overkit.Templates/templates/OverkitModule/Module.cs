@@ -13,6 +13,9 @@ public sealed class Module : IOverkitModule
     private IModuleContext _context = null!;
     private GameStateSnapshot _snapshot = GameStateSnapshot.Empty;
 
+    // État propre au module, piloté par les sections interactives de la vue.
+    private string _search = "";
+
     public ModuleManifest Manifest { get; } = new()
     {
         // Reverse-DNS sur un domaine contrôlé : c'est ce qui garantit l'unicité
@@ -43,6 +46,18 @@ public sealed class Module : IOverkitModule
     /// </summary>
     public void OnStateUpdated(GameStateSnapshot snapshot) => _snapshot = snapshot;
 
+    /// <summary>
+    /// Reçoit ce que l'utilisateur saisit dans les sections interactives, par
+    /// identifiant de section. L'overlay redemande la vue juste après.
+    /// </summary>
+    public void OnInteraction(ViewInteraction interaction)
+    {
+        if (interaction.Id == "search")
+        {
+            _search = interaction.Value;
+        }
+    }
+
     public ModuleView BuildView()
     {
         var palbox = _snapshot.Palbox;
@@ -61,12 +76,11 @@ public sealed class Module : IOverkitModule
         var females = pals.Count(p => p.Gender == Overkit.Contracts.PalGender.Female);
 
         var rows = pals
-            .OrderByDescending(p => p.Level ?? 0)
+            .Select(p => (Pal: p, Name: _context.RefData?.SpeciesName(p.Species_id) ?? p.Species_id))
+            .Where(x => _search.Length == 0 || x.Name.Contains(_search, StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(x => x.Pal.Level ?? 0)
             .Take(5)
-            .Select(p => new TableRow([
-                _context.RefData?.SpeciesName(p.Species_id) ?? p.Species_id,
-                (p.Level ?? 0).ToString(),
-            ]))
+            .Select(x => new TableRow([x.Name, (x.Pal.Level ?? 0).ToString()]))
             .ToList();
 
         return new ModuleView(Manifest.Name, [
@@ -75,6 +89,7 @@ public sealed class Module : IOverkitModule
                 new CounterItem("Mâles", males.ToString()),
                 new CounterItem("Femelles", females.ToString()),
             ]),
+            new TextInputSection("search", "Rechercher", _search, "nom d'espèce"),
             new TableSection(["PAL", "NIVEAU"], rows),
         ]);
     }

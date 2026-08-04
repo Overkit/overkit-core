@@ -60,4 +60,32 @@ public interface IOverkitModule
 
     /// <summary>Décrit ce qu'il faut afficher, à partir du dernier état connu.</summary>
     ModuleView BuildView();
+
+    /// <summary>
+    /// Reçoit une action de l'utilisateur sur une section interactive : saisie
+    /// validée, choix, bascule, clic sur un bouton ou sur une ligne de tableau.
+    /// Le module met à jour son état interne ; le host redemande aussitôt la
+    /// vue. Ignorer pour un module purement contemplatif.
+    /// </summary>
+    void OnInteraction(ViewInteraction interaction)
+    {
+    }
+}
+
+/// <summary>
+/// Action de l'utilisateur sur une section interactive. La valeur transite en
+/// texte pour que la frontière module reste stable quand de nouveaux types de
+/// champs apparaissent ; les accesseurs typés couvrent les cas courants.
+/// </summary>
+/// <param name="Id">Identifiant de la section, tel que déclaré dans la vue.</param>
+/// <param name="Value">Saisie, valeur choisie, clé de ligne, ou chaîne vide pour un bouton.</param>
+public sealed record ViewInteraction(string Id, string Value)
+{
+    public bool AsBool() => bool.TryParse(Value, out var parsed) && parsed;
+
+    public double AsNumber() =>
+        double.TryParse(Value, System.Globalization.NumberStyles.Float,
+            System.Globalization.CultureInfo.InvariantCulture, out var parsed)
+            ? parsed
+            : 0;
 }

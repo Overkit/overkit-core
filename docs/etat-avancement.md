@@ -40,8 +40,10 @@ overkit/
 - [x] **Critère de sortie partiel atteint** : un module compilé hors du host, déposé dans `Modules/`, se charge et s'affiche (`Overkit.Module.BaseAudit`)
 - [x] Moteur de Cards : interpréteur borné, sections déclaratives, un fichier JSON par Card (EXG-040, EXG-041) ; module Alertes livré en Card (§6.5) ; guide dans `docs/cards.md`
 - [x] Éditeur de Cards in-game : blocs guidés (compter / lister / alerter / afficher), filtres champ-opérateur-valeur, aperçu en direct, création-modification-suppression à chaud ; cards du joueur stockées hors installation (survivent aux mises à jour)
-- [ ] Template `dotnet new overkit-module` + package NuGet du SDK
-- [ ] Sections interactives (saisie, sélection) — le déclaratif v1 ne couvre que l'affichage, d'où les vues Palbox/Craft/Carte restées intégrées
+- [x] Template `dotnet new overkit-module` + paquets NuGet (`Overkit.Contracts`, `Overkit.Sdk`, `Overkit.Templates`) — construits localement, publication en ligne non faite
+- [x] Sections interactives (saisie, nombre, choix, bascule, boutons, lignes de tableau cliquables) : le module décrit un champ, le host le rend et lui renvoie l'action par `OnInteraction` — démontré sur `Overkit.Module.BaseAudit` (seuil, filtre par base, critiques seulement)
+
+Le reste à faire, toutes phases confondues, est listé dans [backlog.md](backlog.md).
 
 **Écosystème — dépôts de registre** (prévu)
 

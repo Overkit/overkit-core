@@ -226,6 +226,26 @@ public sealed class ModuleLoader
         }
     }
 
+    /// <summary>
+    /// Transmet une action de l'utilisateur au module, en absorbant ses pannes :
+    /// un champ mal géré désactive le module, pas le panneau (EXG-060).
+    /// </summary>
+    public void Interact(LoadedModule module, ViewInteraction interaction)
+    {
+        if (module.Status != ModuleStatus.Active)
+        {
+            return;
+        }
+        try
+        {
+            module.Instance.OnInteraction(interaction);
+        }
+        catch (Exception ex)
+        {
+            Fault(module, ex);
+        }
+    }
+
     private void Fault(LoadedModule module, Exception ex)
     {
         module.Status = ModuleStatus.Faulted;

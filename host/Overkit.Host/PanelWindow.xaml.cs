@@ -19,8 +19,11 @@ public sealed partial class PanelWindow : Window
 {
     private readonly Dictionary<string, UIElement> _pages = new(StringComparer.Ordinal);
 
-    public PanelWindow(StateBus bus, RefData refData, ModuleLoader loader, CardLoader cards)
+    private readonly StateBus _bus;
+
+    public PanelWindow(StateBus bus, RefData refData, ModuleLoader loader, CardLoader cards, string cardsDirectory)
     {
+        _bus = bus;
         InitializeComponent();
 
         ExtendsContentIntoTitleBar = true;
@@ -43,13 +46,26 @@ public sealed partial class PanelWindow : Window
         Breeding.Initialize(bus, refData);
         Map.Initialize(bus, refData);
 
+        Editor.Initialize(bus, cards, cardsDirectory);
+
         _pages["palbox"] = Palbox;
         _pages["craft"] = Craft;
         _pages["breeding"] = Breeding;
         _pages["map"] = Map;
+        _pages["editor"] = Editor;
 
         AddModuleTabs(bus, loader);
         AddCardTabs(bus, cards);
+
+        // Une Card créée dans l'éditeur apparaît immédiatement comme onglet.
+        cards.CardSaved += (card, replaced) =>
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                if (!replaced)
+                {
+                    AddCardTab(card);
+                }
+            });
     }
 
     /// <summary>Un onglet par Card chargée — même rendu que les modules.</summary>
@@ -57,18 +73,32 @@ public sealed partial class PanelWindow : Window
     {
         foreach (var card in cards.Cards)
         {
-            var view = new ModuleHostView { Visibility = Visibility.Collapsed };
-            view.Initialize(bus, card.BuildView);
+            AddCardTab(card);
+        }
+    }
 
-            var tag = "card:" + card.Definition.Id;
-            _pages[tag] = view;
-            Pages.Children.Add(view);
+    private void AddCardTab(CardRuntime card)
+    {
+        var view = new ModuleHostView { Visibility = Visibility.Collapsed };
+        view.Initialize(_bus, card.BuildView);
 
-            Nav.MenuItems.Add(new NavigationViewItem
-            {
-                Content = card.Definition.Name,
-                Tag = tag,
-            });
+        var tag = "card:" + card.Definition.Id;
+        _pages[tag] = view;
+        Pages.Children.Add(view);
+
+        // Les cards se placent avant l'éditeur, qui reste le dernier onglet.
+        var editorIndex = Nav.MenuItems
+            .OfType<NavigationViewItem>()
+            .ToList()
+            .FindIndex(item => (item.Tag as string) == "editor");
+        var newItem = new NavigationViewItem { Content = card.Definition.Name, Tag = tag };
+        if (editorIndex >= 0)
+        {
+            Nav.MenuItems.Insert(editorIndex, newItem);
+        }
+        else
+        {
+            Nav.MenuItems.Add(newItem);
         }
     }
 

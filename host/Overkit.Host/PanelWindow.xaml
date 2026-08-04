@@ -27,6 +27,7 @@
                 <NavigationViewItem Content="Checklist de craft" Tag="craft" />
                 <NavigationViewItem Content="Accouplement" Tag="breeding" />
                 <NavigationViewItem Content="Carte" Tag="map" />
+                <NavigationViewItem Content="＋ Créer une card" Tag="editor" />
             </NavigationView.MenuItems>
         </NavigationView>
 
@@ -35,6 +36,7 @@
             <views:CraftView x:Name="Craft" Visibility="Collapsed" />
             <views:BreedingView x:Name="Breeding" Visibility="Collapsed" />
             <views:MapView x:Name="Map" Visibility="Collapsed" />
+            <views:CardEditorView x:Name="Editor" Visibility="Collapsed" />
         </Grid>
     </Grid>
 </Window>

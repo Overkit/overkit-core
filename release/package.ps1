@@ -21,9 +21,12 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+# Deux paquets, un par composant — c'est ce que le joueur installe séparément :
+#   Overkit-Overlay-<version>-win-x64.zip : l'application (GitHub)
+#   Overkit-Probe-<version>.zip           : le mod UE4SS (GitHub + Nexus)
 $repo = Resolve-Path "$PSScriptRoot\.."
-$stage = "$PSScriptRoot\out\Overkit-$Version"
-$zip = "$PSScriptRoot\out\Overkit-$Version-win-x64.zip"
+$stage = "$PSScriptRoot\out\Overkit-Overlay-$Version"
+$zip = "$PSScriptRoot\out\Overkit-Overlay-$Version-win-x64.zip"
 $build = "$PSScriptRoot\out\build-$Version"
 
 Write-Host "Compilation du host ($(if ($SelfContained) { 'autonome' } else { 'runtime .NET requis' }))..."
@@ -41,11 +44,10 @@ Get-ChildItem "$repo\modules" -Directory -ErrorAction SilentlyContinue | ForEach
     dotnet build $_.FullName -c Release --nologo -v q | Out-Null
 }
 
-Write-Host "Assemblage du paquet..."
+Write-Host "Assemblage du paquet overlay..."
 if (Test-Path $stage) { Remove-Item $stage -Recurse -Force }
 New-Item -ItemType Directory -Force "$stage\Overkit\data" | Out-Null
 New-Item -ItemType Directory -Force "$stage\Overkit\Cards" | Out-Null
-New-Item -ItemType Directory -Force "$stage\PalworldMod\OverkitProbe\dlls" | Out-Null
 
 # Binaires du host (hors artefacts de compilation)
 Get-ChildItem $build -Recurse -File |
@@ -71,9 +73,6 @@ Get-ChildItem "$repo\modules" -Directory -ErrorAction SilentlyContinue | ForEach
     }
 }
 
-Copy-Item $ProbeDll "$stage\PalworldMod\OverkitProbe\dlls\main.dll"
-Copy-Item "$repo\probe\mapping.json" "$stage\PalworldMod\OverkitProbe\mapping.json"
-Set-Content "$stage\PalworldMod\OverkitProbe\enabled.txt" '' -Encoding ascii
 Copy-Item "$repo\release\LICENSE-BINARY.txt" "$stage\LICENSE.txt"
 
 Compress-Archive -Path $stage -DestinationPath $zip -Force
@@ -83,8 +82,8 @@ Write-Host ("OK : {0} ({1:N1} Mo)" -f $zip, ((Get-Item $zip).Length / 1MB))
 # Second paquet : la sonde seule. Nexus Mods héberge le mod de jeu, tandis que
 # l'application compagnon reste sur GitHub — un exécutable .NET non signé
 # déclenche des heuristiques génériques qui bloquent la modération (ADR-0006).
-$probeStage = "$PSScriptRoot\out\OverkitProbe-$Version"
-$probeZip = "$PSScriptRoot\out\OverkitProbe-$Version.zip"
+$probeStage = "$PSScriptRoot\out\Overkit-Probe-$Version"
+$probeZip = "$PSScriptRoot\out\Overkit-Probe-$Version.zip"
 if (Test-Path $probeStage) { Remove-Item $probeStage -Recurse -Force }
 New-Item -ItemType Directory -Force "$probeStage\OverkitProbe\dlls" | Out-Null
 Copy-Item $ProbeDll "$probeStage\OverkitProbe\dlls\main.dll"

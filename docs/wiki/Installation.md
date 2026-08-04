@@ -28,7 +28,7 @@ Download `UE4SS-Palworld.zip` from the link above, and extract **`dwmapi.dll`** 
 
 ## 2. Install the Overkit probe
 
-From the [latest release](https://github.com/Overkit/overkit/releases), unzip the package and copy the folder:
+From the [latest release](https://github.com/Overkit/overkit/releases), download **`Overkit-Probe-….zip`** (or get the mod from Nexus Mods) and copy the folder:
 
 ```
 PalworldMod\OverkitProbe   →   ...\ue4ss\Mods\OverkitProbe
@@ -38,7 +38,7 @@ That folder contains the probe DLL, its `mapping.json` and an `enabled.txt`. Not
 
 ## 3. Run the overlay
 
-Extract the `Overkit` folder anywhere you like (Documents, a games folder — not inside the game's install) and run **`Overkit.Host.exe`**.
+Download **`Overkit-Overlay-….zip`**, extract the `Overkit` folder anywhere you like (Documents, a games folder — not inside the game's install) and run **`Overkit.Host.exe`**.
 
 It parks itself in the system tray next to the clock and waits for Palworld.
 

@@ -28,7 +28,7 @@ Télécharge `UE4SS-Palworld.zip` depuis le lien ci-dessus, puis extrais **`dwma
 
 ## 2. Installer la sonde Overkit
 
-Depuis la [dernière release](https://github.com/Overkit/overkit/releases), décompresse le paquet et copie le dossier :
+Depuis la [dernière release](https://github.com/Overkit/overkit/releases), télécharge **`Overkit-Probe-….zip`** (ou récupère le mod sur Nexus Mods) et copie le dossier :
 
 ```
 PalworldMod\OverkitProbe   →   ...\ue4ss\Mods\OverkitProbe
@@ -38,7 +38,7 @@ Ce dossier contient la DLL de la sonde, son `mapping.json` et un `enabled.txt`. 
 
 ## 3. Lancer l'overlay
 
-Extrais le dossier `Overkit` où tu veux (Documents, un dossier de jeux — pas dans l'installation du jeu) et lance **`Overkit.Host.exe`**.
+Télécharge **`Overkit-Overlay-….zip`**, extrais le dossier `Overkit` où tu veux (Documents, un dossier de jeux — pas dans l'installation du jeu) et lance **`Overkit.Host.exe`**.
 
 Il se range dans la zone de notification près de l'horloge et attend Palworld.
 

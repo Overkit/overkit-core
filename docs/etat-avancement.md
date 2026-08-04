@@ -39,7 +39,7 @@ overkit/
 - [x] Chargeur de modules : `AssemblyLoadContext` collectible, compatibilité vérifiée avec raison affichée (EXG-070), panne d'un module isolée (EXG-060)
 - [x] **Critère de sortie partiel atteint** : un module compilé hors du host, déposé dans `Modules/`, se charge et s'affiche (`Overkit.Module.BaseAudit`)
 - [x] Moteur de Cards : interpréteur borné, sections déclaratives, un fichier JSON par Card (EXG-040, EXG-041) ; module Alertes livré en Card (§6.5) ; guide dans `docs/cards.md`
-- [ ] Éditeur de Cards in-game (créer une Card sans quitter le jeu, < 10 min pour un non-dev)
+- [x] Éditeur de Cards in-game : blocs guidés (compter / lister / alerter / afficher), filtres champ-opérateur-valeur, aperçu en direct, création-modification-suppression à chaud ; cards du joueur stockées hors installation (survivent aux mises à jour)
 - [ ] Template `dotnet new overkit-module` + package NuGet du SDK
 - [ ] Sections interactives (saisie, sélection) — le déclaratif v1 ne couvre que l'affichage, d'où les vues Palbox/Craft/Carte restées intégrées
 

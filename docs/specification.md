@@ -148,7 +148,7 @@ Les capacités sont déclarées dans le manifeste et affichées avant activation
 
 ```json
 {
-  "id": "com.exemple.base-audit",
+  "id": "fr.overkit.base-audit",
   "name": "Audit de base",
   "version": "1.2.0",
   "authors": ["…"],

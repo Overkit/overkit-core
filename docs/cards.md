@@ -6,7 +6,7 @@ Une Card est un **fichier JSON unique**, sans code, déposé dans le dossier `Ca
 
 ```json
 {
-  "id": "com.moi.ma-card",
+  "id": "fr.moi.ma-card",
   "name": "Ma card",
   "version": "1.0.0",
   "authors": ["Moi"],
@@ -16,6 +16,8 @@ Une Card est un **fichier JSON unique**, sans code, déposé dans le dossier `Ca
 ```
 
 `state_requires` liste les domaines du State Bus nécessaires : tant qu'ils sont indisponibles, la Card affiche un message d'attente au lieu de données fausses.
+
+L'`id` s'écrit en reverse-DNS sur un domaine réellement détenu (`fr.moi.ma-card` pour `moi.fr`) : c'est ce qui garantit son unicité face aux autres add-ons. L'éditeur in-game, qui ne connaît aucun domaine du joueur, préfixe ses créations par `local.`.
 
 ## Sections disponibles
 

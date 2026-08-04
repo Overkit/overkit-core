@@ -30,8 +30,6 @@ Palworld pour être validé.
       (`Overkit.Contracts`, `Overkit.Sdk`, `Overkit.Templates`) se construisent
       dans `release/out/nuget/` et s'installent depuis une source locale ; la
       mise en ligne sur nuget.org attend une décision.
-- [ ] `docs/modules.md` : guide de création d'un module, du template au dépôt
-      dans `Modules/`.
 - [ ] Trois dépôts de registre — modules C#, scripts Lua, Cards JSON. Un
       manifeste par add-on, validation du schéma et de la licence en CI,
       publication par pull request, merge = apparition au catalogue (EXG-081).

@@ -7,7 +7,11 @@ namespace Overkit.Sdk;
 /// </summary>
 public sealed record ModuleManifest
 {
-    /// <summary>Identifiant inverse-DNS, ex. « com.exemple.base-audit ».</summary>
+    /// <summary>
+    /// Identifiant en reverse-DNS sur un domaine réellement détenu, ex.
+    /// « fr.overkit.base-audit » pour overkit.fr. C'est la clé d'unicité face
+    /// aux autres modules chargés.
+    /// </summary>
     public required string Id { get; init; }
 
     public required string Name { get; init; }

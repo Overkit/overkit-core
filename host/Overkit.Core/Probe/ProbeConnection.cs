@@ -107,8 +107,8 @@ public sealed class ProbeConnection : IDisposable
                     }
                     _log($"Handshake Sonde v{handshake.Probe_version}, schéma {handshake.Schema_version}, " +
                          $"jeu {handshake.Game_build}, mapping {handshake.Mapping_version}");
-                    // EXG-004 : à la sortie du spike, comparer schema_version
-                    // (majeur) et refuser/dégrader ici.
+                    // TODO (EXG-004) : comparer schema_version (majeur) et
+                    // refuser ou dégrader ici.
                     _bus.SetHandshake(handshake);
                     break;
 

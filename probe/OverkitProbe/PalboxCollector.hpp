@@ -5,8 +5,8 @@
 namespace Overkit
 {
     // Collecteur Palbox (§3.1) : parcourt le conteneur de 960 slots du joueur
-    // par réflexion pure et produit le domaine JSON `palbox`. Chaîne validée
-    // in-game (2026-08-02, build 1.10.1103.0) :
+    // par réflexion pure et produit le domaine JSON `palbox`. Chaîne de
+    // résolution (vérifiée sur le build 1.10.1103.0) :
     //   PalPlayerState.PalStorage → PalPlayerDataPalStorage
     //     .TargetContainer → PalIndividualCharacterContainer
     //       .SlotArray[] → PalIndividualCharacterSlot

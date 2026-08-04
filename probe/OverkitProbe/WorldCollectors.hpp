@@ -8,7 +8,7 @@
 namespace Overkit
 {
     // Collecteurs des domaines bases, inventory et nearby (§3.1).
-    // Chaînes validées in-game (2026-08-02, build 1.10.1103.0) :
+    // Chaînes de résolution (vérifiées sur le build 1.10.1103.0) :
     //   bases     : PalBaseCampModel (ID, Transform.Translation) +
     //               WorkerDirector.CharacterContainer (slots des travailleurs)
     //   inventory : PalPlayerState.InventoryData.MyInventoryInfo.*ContainerId

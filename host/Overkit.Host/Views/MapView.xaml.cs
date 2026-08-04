@@ -20,7 +20,7 @@ public sealed class SpotRow
 }
 
 /// <summary>
-/// Vue carte (§9 Phase 2) : fond stylisé (l'image du jeu n'est pas
+/// Vue carte : fond stylisé (l'image du jeu n'est pas
 /// redistribuée, §10 — elle viendra de l'extraction locale par l'installeur),
 /// marqueurs de bases, position live du joueur, spots de farm de l'espèce
 /// recherchée (module Routing) et mise en cible pour le HUD.

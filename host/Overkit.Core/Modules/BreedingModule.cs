@@ -15,8 +15,8 @@ public sealed record BreedingResult(string TargetId, string TargetName, IReadOnl
 /// Module Accouplement inversé (§6.3) : cible → toutes les paires de parents
 /// (formule CombiRank floor((A+B+1)/2) + combos spéciaux du dataset) →
 /// paires réalisables avec la Palbox réelle (genres inclus) en tête.
-/// Probabilités et passifs : à venir — les résultats sont des possibilités,
-/// jamais des certitudes.
+/// Les probabilités d'héritage des passifs ne sont pas calculées : les
+/// résultats sont des possibilités, jamais des certitudes (§6).
 /// </summary>
 public static class BreedingModule
 {

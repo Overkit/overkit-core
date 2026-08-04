@@ -3,6 +3,7 @@
 Source code of **Overkit — All-in-One Overlay for Palworld**: a free, read-only overlay that brings your palbox, base alerts, craft checklists, breeding pairs and a live farm map inside the game. MIT licensed.
 
 - 🎮 **Players**: downloads and installation → **[Overkit/overkit](https://github.com/Overkit/overkit)** · **[Wiki](https://github.com/Overkit/overkit/wiki)**
+- 📐 **Specification**: [docs/specification.md](docs/specification.md) — principles (P1…P7), architecture, State Bus, requirements (EXG-xxx) referenced throughout the code
 - 📋 **Progress and roadmap**: [docs/etat-avancement.md](docs/etat-avancement.md) (French)
 - 🏛 **Architecture decisions**: [docs/decisions/](docs/decisions/)
 - 🃏 **Card language reference**: [docs/cards.md](docs/cards.md)

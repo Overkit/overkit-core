@@ -38,11 +38,11 @@ namespace
     };
 }
 
-// Sonde Overkit — spike Phase 0.
-// Collecte position joueur (10 Hz) par réflexion, lecture seule stricte (P1),
-// et publie sur un WebSocket local (127.0.0.1:47800, EXG-002).
-// L'heure in-game est annoncée `unavailable` tant que sa classe source n'est
-// pas identifiée (travail de mapping en cours, spike Lua).
+// Sonde Overkit — mod UE4SS en lecture seule (§2.1).
+// Collecte l'état du jeu par réflexion (P1 : aucune écriture) et le publie sur
+// un WebSocket local (127.0.0.1:47800, EXG-002) : position à 10 Hz, heure
+// in-game à 1 Hz, acteurs proches à 2 Hz, et resync des domaines palbox,
+// équipe, bases et inventaire toutes les 30 s.
 class OverkitProbe : public CppUserModBase
 {
 public:

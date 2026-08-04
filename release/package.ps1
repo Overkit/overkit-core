@@ -1,8 +1,21 @@
 # Assemble le paquet de release public d'Overkit (binaires uniquement).
-# Usage : .\release\package.ps1 -Version 0.1.0-alpha
-# Produit : release\out\Overkit-<version>-win-x64.zip
+#
+#   .\release\package.ps1 -Version 0.2.0-alpha
+#     → paquet allégé : le runtime .NET n'est pas embarqué (le joueur installe
+#       le .NET 8 Desktop Runtime, lien dans le README). Le Windows App SDK
+#       reste embarqué : un seul prérequis. Sans le runtime .NET dans le
+#       paquet, plus de vcruntime140_cor3.dll — c'est ce chargement qui
+#       déclenchait l'heuristique de sideloading des scanners (ADR-0006).
+#
+#   .\release\package.ps1 -Version 0.2.0-alpha -SelfContained
+#     → paquet autonome, aucun prérequis, mais ~300 Mo et heuristique probable.
+#
+# Note : on empaquette la sortie de `dotnet build` et non de `dotnet publish` —
+# le publish WinUI non packagé perd le fichier .pri et les vues compilées
+# (.xbf), ce qui fait planter le panneau au démarrage.
 param(
     [Parameter(Mandatory = $true)][string]$Version,
+    [switch]$SelfContained,
     [string]$DatasetDir = "$PSScriptRoot\..\..\dataset-local\out",
     [string]$ProbeDll = "$PSScriptRoot\..\..\probe-workspace\build\OverkitProbe\Game__Shipping__Win64\main.dll"
 )
@@ -11,23 +24,58 @@ $ErrorActionPreference = 'Stop'
 $repo = Resolve-Path "$PSScriptRoot\.."
 $stage = "$PSScriptRoot\out\Overkit-$Version"
 $zip = "$PSScriptRoot\out\Overkit-$Version-win-x64.zip"
+$build = "$PSScriptRoot\out\build-$Version"
 
-Write-Host "Publication du host (self-contained win-x64)..."
-dotnet publish "$repo\host\Overkit.Host" -c Release -r win-x64 --self-contained true | Out-Null
-$publish = "$repo\host\Overkit.Host\bin\Release\net8.0-windows10.0.19041.0\win-x64\publish"
+Write-Host "Compilation du host ($(if ($SelfContained) { 'autonome' } else { 'runtime .NET requis' }))..."
+if (Test-Path $build) { Remove-Item $build -Recurse -Force }
+dotnet build "$repo\host\Overkit.Host" -c Release -r win-x64 `
+    --self-contained $(if ($SelfContained) { 'true' } else { 'false' }) `
+    -p:WindowsAppSDKSelfContained=true -o $build --nologo -v q | Out-Null
+
+if (-not (Test-Path "$build\Overkit.Host.pri")) {
+    throw "Overkit.Host.pri manquant : le panneau planterait au demarrage."
+}
+
+Write-Host "Compilation des modules..."
+Get-ChildItem "$repo\modules" -Directory -ErrorAction SilentlyContinue | ForEach-Object {
+    dotnet build $_.FullName -c Release --nologo -v q | Out-Null
+}
 
 Write-Host "Assemblage du paquet..."
 if (Test-Path $stage) { Remove-Item $stage -Recurse -Force }
 New-Item -ItemType Directory -Force "$stage\Overkit\data" | Out-Null
+New-Item -ItemType Directory -Force "$stage\Overkit\Cards" | Out-Null
 New-Item -ItemType Directory -Force "$stage\PalworldMod\OverkitProbe\dlls" | Out-Null
 
-Copy-Item "$publish\*" "$stage\Overkit\" -Recurse
+# Binaires du host (hors artefacts de compilation)
+Get-ChildItem $build -Recurse -File |
+    Where-Object { $_.Extension -notin '.pdb', '.xml' } |
+    ForEach-Object {
+        $target = Join-Path "$stage\Overkit" $_.FullName.Substring($build.Length).TrimStart('\')
+        New-Item -ItemType Directory -Force (Split-Path $target) | Out-Null
+        Copy-Item $_.FullName $target
+    }
+
 Copy-Item "$DatasetDir\*.json" "$stage\Overkit\data\"
 Copy-Item "$repo\dataset\map_calibration.draft.json" "$stage\Overkit\data\map_calibration.json"
+Copy-Item "$repo\cards\*.json" "$stage\Overkit\Cards\" -ErrorAction SilentlyContinue
+
+# Modules fournis
+Get-ChildItem "$repo\modules" -Directory -ErrorAction SilentlyContinue | ForEach-Object {
+    $dll = Get-ChildItem "$($_.FullName)\bin\Release\net8.0" -Filter 'Overkit.Module.*.dll' -ErrorAction SilentlyContinue |
+           Select-Object -First 1
+    if ($dll) {
+        $target = "$stage\Overkit\Modules\$($_.Name)"
+        New-Item -ItemType Directory -Force $target | Out-Null
+        Copy-Item $dll.FullName $target
+    }
+}
+
 Copy-Item $ProbeDll "$stage\PalworldMod\OverkitProbe\dlls\main.dll"
 Copy-Item "$repo\probe\mapping.json" "$stage\PalworldMod\OverkitProbe\mapping.json"
 Set-Content "$stage\PalworldMod\OverkitProbe\enabled.txt" '' -Encoding ascii
 Copy-Item "$repo\release\LICENSE-BINARY.txt" "$stage\LICENSE.txt"
 
 Compress-Archive -Path $stage -DestinationPath $zip -Force
+Remove-Item $build -Recurse -Force
 Write-Host ("OK : {0} ({1:N1} Mo)" -f $zip, ((Get-Item $zip).Length / 1MB))

@@ -44,6 +44,21 @@ public partial class App : Application
             }
         }
 
+        // Toute panne non gérée doit laisser une trace : sans ça, un crash au
+        // démarrage est indiscernable d'une fermeture normale.
+        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+            Log($"PANNE non gérée : {e.ExceptionObject}");
+        TaskScheduler.UnobservedTaskException += (_, e) =>
+        {
+            Log($"PANNE de tâche : {e.Exception}");
+            e.SetObserved();
+        };
+        UnhandledException += (_, e) =>
+        {
+            Log($"PANNE interface : {e.Exception}");
+            e.Handled = true;
+        };
+
         Log("--- Overkit Host démarre ---");
         var settings = HostSettings.Load(Log);
         var calibration = MapCalibration.TryLoad(Log);
@@ -69,17 +84,24 @@ public partial class App : Application
 
         var hudThread = new Thread(() =>
         {
-            System.Windows.Forms.Application.SetHighDpiMode(System.Windows.Forms.HighDpiMode.PerMonitorV2);
-            System.Windows.Forms.Application.EnableVisualStyles();
+            try
+            {
+                System.Windows.Forms.Application.SetHighDpiMode(System.Windows.Forms.HighDpiMode.PerMonitorV2);
+                System.Windows.Forms.Application.EnableVisualStyles();
 
-            _hud = new HudWindow(_bus, calibration, settings.PanelHotkeyVk, settings.GameProcessNames, TogglePanel);
-            using var tray = new TrayIcon(
-                togglePanel: TogglePanel,
-                openSettings: () => OpenSettingsFile(settings, Log),
-                openLog: () => ShellOpen(logPath, Log),
-                quit: Quit);
+                _hud = new HudWindow(_bus, calibration, settings.PanelHotkeyVk, settings.GameProcessNames, TogglePanel);
+                using var tray = new TrayIcon(
+                    togglePanel: TogglePanel,
+                    openSettings: () => OpenSettingsFile(settings, Log),
+                    openLog: () => ShellOpen(logPath, Log),
+                    quit: Quit);
 
-            System.Windows.Forms.Application.Run(_hud);
+                System.Windows.Forms.Application.Run(_hud);
+            }
+            catch (Exception ex)
+            {
+                Log($"PANNE du HUD : {ex}");
+            }
 
             // Fermeture du HUD = arrêt du host.
             Log("--- Overkit Host arrêté ---");

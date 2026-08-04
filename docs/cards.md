@@ -53,7 +53,7 @@ Dans un filtre, le chemin s'applique d'abord à l'élément courant : `level`, `
 | `sum` `avg` `min` `max` | `palbox.pals \| avg(talents.hp)` |
 | `any` `first` | `bases.list \| any(count(workers) > 8)` |
 
-**Fonctions utilitaires** : `round(x[, décimales])`, `floor`, `abs`, `percent(a, b)`, `lower`, `contains(a, b)`, `concat(...)`, `if(condition, alors, sinon)`, `isset(x)`.
+**Fonctions utilitaires** : `round(x[, décimales])`, `floor`, `abs`, `percent(a, b)`, `lower`, `pad(valeur, longueur)`, `contains(a, b)`, `concat(...)`, `if(condition, alors, sinon)`, `isset(x)`.
 
 ## Exemples
 

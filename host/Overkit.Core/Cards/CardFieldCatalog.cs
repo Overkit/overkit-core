@@ -67,7 +67,10 @@ public static class CardFieldCatalog
     [
         new CardField("palbox.owned_count", "Pals possédés (total)", CardFieldKind.Number),
         new CardField("world.time.day", "Jour in-game", CardFieldKind.Number),
-        new CardField("world.time.hour", "Heure in-game", CardFieldKind.Number),
+        new CardField("concat(pad(world.time.hour, 2), \":\", pad(world.time.minute, 2))",
+                      "Heure in-game (hh:mm)", CardFieldKind.Text),
+        new CardField("world.time.hour", "Heure in-game (0-23)", CardFieldKind.Number),
+        new CardField("world.time.minute", "Minute in-game", CardFieldKind.Number),
         new CardField("count(bases.list)", "Nombre de bases", CardFieldKind.Number),
         new CardField("count(nearby.actors)", "Pals autour de moi", CardFieldKind.Number),
     ];

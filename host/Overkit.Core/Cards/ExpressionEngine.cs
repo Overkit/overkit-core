@@ -255,6 +255,8 @@ public static class ExpressionEngine
                 "percent" => args.Count > 1 && ToNumber(args[1]) != 0
                     ? ToNumber(args[0]) / ToNumber(args[1]) * 100
                     : 0d,
+                // pad(5, 2) => « 05 » : pour composer une heure « 16:05 ».
+                "pad" => AsString(args[0]).PadLeft(args.Count > 1 ? (int)ToNumber(args[1]) : 2, '0'),
                 "lower" => AsString(args[0]).ToLowerInvariant(),
                 "contains" => AsString(args[0]).Contains(AsString(args[1]), StringComparison.OrdinalIgnoreCase),
                 "concat" => string.Concat(args.Select(AsString)),

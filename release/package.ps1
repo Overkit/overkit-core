@@ -79,3 +79,17 @@ Copy-Item "$repo\release\LICENSE-BINARY.txt" "$stage\LICENSE.txt"
 Compress-Archive -Path $stage -DestinationPath $zip -Force
 Remove-Item $build -Recurse -Force
 Write-Host ("OK : {0} ({1:N1} Mo)" -f $zip, ((Get-Item $zip).Length / 1MB))
+
+# Second paquet : la sonde seule. Nexus Mods héberge le mod de jeu, tandis que
+# l'application compagnon reste sur GitHub — un exécutable .NET non signé
+# déclenche des heuristiques génériques qui bloquent la modération (ADR-0006).
+$probeStage = "$PSScriptRoot\out\OverkitProbe-$Version"
+$probeZip = "$PSScriptRoot\out\OverkitProbe-$Version.zip"
+if (Test-Path $probeStage) { Remove-Item $probeStage -Recurse -Force }
+New-Item -ItemType Directory -Force "$probeStage\OverkitProbe\dlls" | Out-Null
+Copy-Item $ProbeDll "$probeStage\OverkitProbe\dlls\main.dll"
+Copy-Item "$repo\probe\mapping.json" "$probeStage\OverkitProbe\mapping.json"
+Set-Content "$probeStage\OverkitProbe\enabled.txt" '' -Encoding ascii
+Copy-Item "$repo\release\LICENSE-BINARY.txt" "$probeStage\LICENSE.txt"
+Compress-Archive -Path "$probeStage\*" -DestinationPath $probeZip -Force
+Write-Host ("OK : {0} ({1:N0} Ko)" -f $probeZip, ((Get-Item $probeZip).Length / 1KB))

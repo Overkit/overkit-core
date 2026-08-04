@@ -18,3 +18,14 @@ Deux pièges rencontrés, documentés pour les prochaines releases :
 
 1. `dotnet publish` d'une application WinUI non packagée **perd `Overkit.Host.pri` et les vues compilées `.xbf`** : le panneau plante au démarrage avec `XamlParseException`. Le paquet est donc assemblé depuis la sortie de `dotnet build -r win-x64 -o <dossier>`, et `package.ps1` échoue explicitement si le `.pri` manque.
 2. Le crash était silencieux — aucune trace dans le journal ni dans l'observateur d'événements. Le host journalise désormais toute exception non gérée (`AppDomain`, `TaskScheduler`, `Application.UnhandledException`, thread du HUD).
+
+## Distribution scindée (2026-08-03)
+
+Nexus Mods bloque toute publication dès une détection VirusTotal, et la v0.2.0-alpha en récolte une : `Trojan.GenKryptik.Win64` chez **Zillya seul** (~70 autres moteurs propres). « GenKryptik » est une heuristique générique visant les binaires packés, que déclenche couramment l'*apphost* .NET d'une application non signée. Aucune variante de packaging ne l'élimine : l'apphost subsiste même en tout framework-dependent (mesuré : 37,7 Mo, `Overkit.Host.exe` toujours présent).
+
+**Décision** : scinder la distribution.
+
+- **Nexus Mods** héberge `OverkitProbe-<version>.zip` (213 Ko) : la sonde UE4SS, `mapping.json`, `enabled.txt`. Aucun exécutable, aucun binaire .NET. C'est le composant qui est réellement un mod de jeu.
+- **GitHub Releases** héberge le paquet complet (overlay + sonde) et reste la source unique de l'application compagnon.
+
+`package.ps1` produit désormais les deux archives. Une contestation de faux positif a été envoyée à Zillya ; la signature de code reste le seul remède de fond et demeure une décision ouverte.

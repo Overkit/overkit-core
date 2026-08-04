@@ -2,20 +2,39 @@ using System.Text.Json;
 
 namespace Overkit.Host.Cards;
 
-/// <summary>Un filtre choisi dans l'éditeur : champ, opérateur, valeur.</summary>
-public sealed record CardFilter(CardField Field, string Operator, string Value)
+/// <summary>Une saisie déclarée par la Card en cours d'édition, telle qu'un filtre peut la viser.</summary>
+public sealed record CardInputRef(string Id, string Label)
+{
+    public override string ToString() => Label;
+}
+
+/// <summary>
+/// Un filtre choisi dans l'éditeur : champ, opérateur, et soit une valeur
+/// fixe, soit une saisie de la Card — auquel cas le filtre suit ce que le
+/// joueur tape, au lieu d'être figé à la création.
+/// </summary>
+public sealed record CardFilter(CardField Field, string Operator, string Value, CardInputRef? Input = null)
 {
     /// <summary>Traduit le choix en expression du langage des Cards.</summary>
     public string ToExpression()
     {
+        if (Input is not null)
+        {
+            return $"{Field.Path} {Operator} inputs.{Input.Id}";
+        }
         var literal = Field.Kind == CardFieldKind.Number && double.TryParse(Value, out _)
             ? Value
             : $"\"{Value.Replace("\"", "")}\"";
         return $"{Field.Path} {Operator} {literal}";
     }
 
-    public string ToLabel() =>
-        $"{Field.Label} {CardFieldCatalog.Operators.FirstOrDefault(o => o.Symbol == Operator).Label ?? Operator} {Value}";
+    public string ToLabel()
+    {
+        var op = CardFieldCatalog.Operators.FirstOrDefault(o => o.Symbol == Operator).Label ?? Operator;
+        return Input is not null
+            ? $"{Field.Label} {op} la saisie « {Input.Label} »"
+            : $"{Field.Label} {op} {Value}";
+    }
 }
 
 /// <summary>
@@ -80,6 +99,70 @@ public static class CardBuilder
 
     public static CardSection BuildText(string text) => new() { Type = "text", Text = text };
 
+    /// <summary>
+    /// Section de saisie. L'éditeur ne demande pas d'identifiant : il le
+    /// dérive de l'intitulé, puisque c'est ce que le créateur a en tête quand
+    /// il vise la saisie depuis un filtre.
+    /// </summary>
+    public static CardSection BuildInput(string label, string kind, string defaultValue,
+                                         IReadOnlyList<string> options)
+    {
+        var section = new CardSection { Id = InputId(label), Label = label, Type = kind };
+
+        switch (kind)
+        {
+            case "number":
+                section.Min = 0;
+                section.Max = 9999;
+                section.Step = 1;
+                section.Default = JsonDocument.Parse(
+                    double.TryParse(defaultValue, out var number)
+                        ? number.ToString(System.Globalization.CultureInfo.InvariantCulture)
+                        : "0").RootElement.Clone();
+                break;
+
+            case "toggle":
+                section.Default = JsonDocument
+                    .Parse(defaultValue.Equals("true", StringComparison.OrdinalIgnoreCase) ? "true" : "false")
+                    .RootElement.Clone();
+                break;
+
+            case "choice":
+                section.Options = options.Select(o => new CardOption { Value = o, Label = o }).ToList();
+                section.Default = JsonSerializer.SerializeToElement(
+                    options.Contains(defaultValue) ? defaultValue : options.FirstOrDefault() ?? "");
+                break;
+
+            default:
+                section.Type = "input";
+                section.Placeholder = "laisser vide pour ne pas filtrer";
+                section.Default = JsonSerializer.SerializeToElement(defaultValue);
+                break;
+        }
+
+        return section;
+    }
+
+    /// <summary>
+    /// Nom de variable pour une saisie : c'est lui qui apparaît dans les
+    /// expressions sous « inputs.x », il doit donc rester un identifiant
+    /// valide même si l'intitulé est accentué ou commence par un chiffre.
+    /// </summary>
+    public static string InputId(string label)
+    {
+        var id = Slugify(label).Replace('-', '_');
+        return id.Length == 0 || char.IsDigit(id[0]) ? "saisie_" + id : id;
+    }
+
+    /// <summary>Saisies déclarées par une suite de blocs, dans l'ordre d'affichage.</summary>
+    public static List<CardInputRef> InputsOf(IEnumerable<CardSection> sections) =>
+        sections
+            .Where(s => s.Id is { Length: > 0 } && InputTypes.Contains(s.Type.ToLowerInvariant()))
+            .Select(s => new CardInputRef(s.Id!, s.Label is { Length: > 0 } label ? label : s.Id!))
+            .ToList();
+
+    private static readonly string[] InputTypes = ["input", "number", "choice", "toggle"];
+
     public static CardDefinition BuildCard(string name, IEnumerable<CardSection> sections, string author)
     {
         var slug = Slugify(name);
@@ -129,6 +212,10 @@ public static class CardBuilder
             "list" => $"Liste{among} ({section.Columns.Count} colonne(s))",
             "alert" => $"Alerte — {section.Title}",
             "text" => $"Texte — {section.Text}",
+            "input" => $"Saisie texte — {section.Label}",
+            "number" => $"Saisie nombre — {section.Label}",
+            "choice" => $"Choix — {section.Label} ({section.Options.Count} option(s))",
+            "toggle" => $"Oui/non — {section.Label}",
             _ => section.Type,
         };
     }

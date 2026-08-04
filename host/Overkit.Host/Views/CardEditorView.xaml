@@ -36,7 +36,23 @@
                             <ComboBoxItem Content="Afficher une liste" Tag="list" />
                             <ComboBoxItem Content="Être alerté" Tag="alert" />
                             <ComboBoxItem Content="Afficher une valeur du jeu" Tag="global" />
+                            <ComboBoxItem Content="Demander une valeur au joueur" Tag="input" />
                         </ComboBox>
+
+                        <!-- Spécifique saisie -->
+                        <StackPanel x:Name="InputOptions" Spacing="6" Visibility="Collapsed">
+                            <ComboBox x:Name="InputKind" Header="Type de saisie" HorizontalAlignment="Stretch"
+                                      SelectedIndex="0" SelectionChanged="InputKind_Changed">
+                                <ComboBoxItem Content="Du texte" Tag="input" />
+                                <ComboBoxItem Content="Un nombre" Tag="number" />
+                                <ComboBoxItem Content="Un choix dans une liste" Tag="choice" />
+                                <ComboBoxItem Content="Oui / non" Tag="toggle" />
+                            </ComboBox>
+                            <TextBox x:Name="InputChoices" Header="Options proposées, séparées par des virgules"
+                                     PlaceholderText="male, female" Visibility="Collapsed" />
+                            <TextBox x:Name="InputDefault" Header="Valeur au départ"
+                                     PlaceholderText="laisser vide" />
+                        </StackPanel>
 
                         <ComboBox x:Name="SourceBox" Header="Parmi" HorizontalAlignment="Stretch"
                                   DisplayMemberPath="Label" SelectionChanged="Source_Changed" />
@@ -61,6 +77,11 @@
                                 <Button x:Name="AddFilter" Grid.Column="3" Content="+" Click="AddFilter_Click"
                                         ToolTipService.ToolTip="Ajouter ce filtre" />
                             </Grid>
+                            <!-- Visible dès qu'un bloc de saisie existe : le filtre suit alors
+                                 ce que le joueur tape, au lieu d'être figé à la création. -->
+                            <ComboBox x:Name="FilterValueSource" Header="Comparer à" HorizontalAlignment="Stretch"
+                                      Visibility="Collapsed" SelectedIndex="0"
+                                      SelectionChanged="FilterValueSource_Changed" />
                             <ItemsControl x:Name="FilterList">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate x:DataType="local:FilterChip">

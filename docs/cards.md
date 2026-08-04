@@ -58,6 +58,8 @@ Les réglages sont conservés dans `%LOCALAPPDATA%\Overkit\card-inputs.json`, s�
 
 La Card `Recherche` livrée avec Overkit (`cards/recherche.card.json`) combine les quatre champs sur un même filtre.
 
+L'éditeur in-game sait créer ces blocs : « Demander une valeur au joueur » choisit le type de saisie, et l'identifiant est dérivé de l'intitulé. Un filtre peut ensuite viser cette saisie plutôt qu'une valeur fixe, par le sélecteur « Comparer à ».
+
 ## Le langage d'expressions
 
 Volontairement limité : pas de boucle, pas d'appel système, pas d'accès disque ou réseau. Chaque rendu dispose d'un budget de temps et un plafond d'éléments parcourus ; au-delà, la Card est suspendue avec un message plutôt que de ralentir le jeu.

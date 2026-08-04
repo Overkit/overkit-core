@@ -43,6 +43,7 @@ overkit/
 - [x] Template `dotnet new overkit-module` + paquets NuGet (`Overkit.Contracts`, `Overkit.Sdk`, `Overkit.Templates`) — construits localement, publication en ligne non faite
 - [x] Sections interactives (saisie, nombre, choix, bascule, boutons, lignes de tableau cliquables) : le module décrit un champ, le host le rend et lui renvoie l'action par `OnInteraction` — démontré sur `Overkit.Module.BaseAudit` (seuil, filtre par base, critiques seulement)
 - [x] Cards interactives : sections `input`, `number`, `choice`, `toggle`, relues dans les expressions sous `inputs.<id>`, réglages conservés hors de la Card pour qu'elle reste partageable — Card `Recherche` livrée en exemple
+- [x] Éditeur in-game : bloc « Demander une valeur au joueur » (texte, nombre, choix, oui/non) et filtres comparés à une saisie plutôt qu'à une constante — une Card interactive se crée sans écrire de JSON
 
 Le reste à faire, toutes phases confondues, est listé dans [backlog.md](backlog.md).
 

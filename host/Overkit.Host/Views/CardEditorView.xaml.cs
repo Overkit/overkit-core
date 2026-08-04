@@ -53,6 +53,14 @@ public sealed partial class CardEditorView : UserControl
     private CardRuntime? _editing;
 
     private bool _suppressTargetChange;
+    private bool _suppressFilterSourceChange;
+
+    /// <summary>
+    /// Saisies faites dans l'aperçu. L'aperçu est reconstruit à chaque
+    /// modification des blocs : sans ce report, tester un filtre effacerait la
+    /// valeur qu'on vient de taper pour le tester.
+    /// </summary>
+    private readonly Dictionary<string, string> _previewInputs = [];
 
     private sealed record EditTargetItem(CardRuntime? Card, string Label)
     {
@@ -87,8 +95,13 @@ public sealed partial class CardEditorView : UserControl
         // L'aperçu est interactif comme la Card finale, mais sans store : ses
         // saisies disparaissent dès que les blocs changent, ce qui évite
         // d'enregistrer les tâtonnements de l'éditeur.
-        Preview.Initialize(bus, BuildPreview, interaction => _preview?.OnInteraction(interaction));
+        Preview.Initialize(bus, BuildPreview, interaction =>
+        {
+            _previewInputs[interaction.Id] = interaction.Value;
+            _preview?.OnInteraction(interaction);
+        });
         RefreshTargets();
+        RefreshInputChoices();
     }
 
     /// <summary>Alimente le sélecteur : « Nouvelle card » + les cards existantes.</summary>
@@ -137,6 +150,7 @@ public sealed partial class CardEditorView : UserControl
 
         // Une card fournie avec Overkit ne se supprime pas : l'enregistrer en
         // crée une version personnelle, qui prend le dessus.
+        RefreshInputChoices();
         DeleteButton.Visibility = card.IsUserCard ? Visibility.Visible : Visibility.Collapsed;
         SaveStatus.Text = card.IsUserCard
             ? $"Modification de « {card.Definition.Name} » — enregistre pour appliquer."
@@ -153,10 +167,12 @@ public sealed partial class CardEditorView : UserControl
         FilterValue.Text = "";
         _blocks.Clear();
         _filters.Clear();
+        _previewInputs.Clear();
         _preview = null;
         NoBlocks.Visibility = Visibility.Visible;
         DeleteButton.Visibility = Visibility.Collapsed;
         SaveStatus.Text = "";
+        RefreshInputChoices();
         RefreshTargets();
     }
 
@@ -200,23 +216,79 @@ public sealed partial class CardEditorView : UserControl
     private CardSource CurrentSource =>
         SourceBox.SelectedItem as CardSource ?? CardFieldCatalog.Sources[0];
 
+    private string SelectedInputKind =>
+        (InputKind.SelectedItem as ComboBoxItem)?.Tag as string ?? "input";
+
     private void UpdateBlockTypeUi()
     {
         var type = SelectedBlockType;
         var isGlobal = type == "global";
+        var isInput = type == "input";
 
-        SourceBox.Visibility = isGlobal ? Visibility.Collapsed : Visibility.Visible;
-        FilterPanel.Visibility = isGlobal ? Visibility.Collapsed : Visibility.Visible;
+        // Une saisie ne parcourt aucune donnée : ni source, ni filtre.
+        SourceBox.Visibility = isGlobal || isInput ? Visibility.Collapsed : Visibility.Visible;
+        FilterPanel.Visibility = isGlobal || isInput ? Visibility.Collapsed : Visibility.Visible;
         GlobalBox.Visibility = isGlobal ? Visibility.Visible : Visibility.Collapsed;
+        InputOptions.Visibility = isInput ? Visibility.Visible : Visibility.Collapsed;
         ListOptions.Visibility = type == "list" ? Visibility.Visible : Visibility.Collapsed;
         AlertLevel.Visibility = type == "alert" ? Visibility.Visible : Visibility.Collapsed;
         BlockLabel.Visibility = type == "list" ? Visibility.Collapsed : Visibility.Visible;
         BlockLabel.Header = type switch
         {
             "alert" => "Titre de l'alerte",
+            "input" => "Ce que je demande",
             _ => "Intitulé affiché",
         };
     }
+
+    private void InputKind_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (InputChoices is null)
+        {
+            return; // pendant l'initialisation du XAML
+        }
+        InputChoices.Visibility = SelectedInputKind == "choice" ? Visibility.Visible : Visibility.Collapsed;
+        InputDefault.PlaceholderText = SelectedInputKind switch
+        {
+            "number" => "0",
+            "toggle" => "non",
+            _ => "laisser vide",
+        };
+    }
+
+    /// <summary>
+    /// Réaligne le sélecteur « Comparer à » sur les saisies déclarées. Il
+    /// n'apparaît que s'il y en a : sans bloc de saisie, la notion n'a pas de
+    /// sens pour le créateur.
+    /// </summary>
+    private void RefreshInputChoices()
+    {
+        var inputs = CardBuilder.InputsOf(_blocks.Select(b => b.Section));
+        var items = new List<object> { FixedValueItem };
+        items.AddRange(inputs);
+
+        _suppressFilterSourceChange = true;
+        FilterValueSource.ItemsSource = items;
+        FilterValueSource.SelectedIndex = 0;
+        _suppressFilterSourceChange = false;
+
+        FilterValueSource.Visibility = inputs.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        FilterValue.IsEnabled = true;
+    }
+
+    private void FilterValueSource_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_suppressFilterSourceChange)
+        {
+            return;
+        }
+        // Comparer à une saisie rend la valeur fixe sans objet.
+        FilterValue.IsEnabled = FilterValueSource.SelectedItem is not CardInputRef;
+    }
+
+    private CardInputRef? SelectedFilterInput => FilterValueSource.SelectedItem as CardInputRef;
+
+    private const string FixedValueItem = "Une valeur fixe";
 
     private void Source_Changed(object sender, SelectionChangedEventArgs e)
     {
@@ -237,15 +309,17 @@ public sealed partial class CardEditorView : UserControl
 
     private void AddFilter_Click(object sender, RoutedEventArgs e)
     {
+        // Comparer à une saisie dispense de valeur fixe : c'est le joueur qui
+        // la fournira au moment d'utiliser la Card.
         if (FilterField.SelectedItem is not CardField field ||
             FilterOperator.SelectedItem is null ||
-            string.IsNullOrWhiteSpace(FilterValue.Text))
+            (SelectedFilterInput is null && string.IsNullOrWhiteSpace(FilterValue.Text)))
         {
             SaveStatus.Text = "Choisis un champ, un opérateur et une valeur pour le filtre.";
             return;
         }
         var symbol = CardFieldCatalog.Operators[FilterOperator.SelectedIndex].Symbol;
-        var filter = new CardFilter(field, symbol, FilterValue.Text.Trim());
+        var filter = new CardFilter(field, symbol, FilterValue.Text.Trim(), SelectedFilterInput);
         _filters.Add(new FilterChip(filter, filter.ToLabel()));
         FilterValue.Text = "";
         RefreshPreview();
@@ -298,6 +372,45 @@ public sealed partial class CardEditorView : UserControl
                 break;
             }
 
+            case "input":
+            {
+                if (label.Length == 0)
+                {
+                    SaveStatus.Text = "Écris ce que tu demandes au joueur — c'est l'intitulé du champ.";
+                    return;
+                }
+                var kind = SelectedInputKind;
+                var options = InputChoices.Text
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .ToList();
+                if (kind == "choice" && options.Count < 2)
+                {
+                    SaveStatus.Text = "Propose au moins deux options, séparées par des virgules.";
+                    return;
+                }
+
+                var id = CardBuilder.InputId(label);
+                if (CardBuilder.InputsOf(_blocks.Select(b => b.Section)).Any(i => i.Id == id))
+                {
+                    SaveStatus.Text = $"Une saisie porte déjà ce nom (« {label} ») — les filtres ne sauraient pas laquelle viser.";
+                    return;
+                }
+
+                var initial = InputDefault.Text.Trim();
+                if (kind == "toggle")
+                {
+                    initial = initial.Equals("oui", StringComparison.OrdinalIgnoreCase) ||
+                              initial.Equals("true", StringComparison.OrdinalIgnoreCase)
+                        ? "true"
+                        : "false";
+                }
+                section = CardBuilder.BuildInput(label, kind, initial, options);
+                chipLabel = CardBuilder.Describe(section);
+                InputDefault.Text = "";
+                InputChoices.Text = "";
+                break;
+            }
+
             case "alert":
             {
                 if (label.Length == 0)
@@ -325,6 +438,7 @@ public sealed partial class CardEditorView : UserControl
         BlockLabel.Text = "";
         NoBlocks.Visibility = Visibility.Collapsed;
         SaveStatus.Text = "";
+        RefreshInputChoices();
         RefreshPreview();
     }
 
@@ -334,6 +448,7 @@ public sealed partial class CardEditorView : UserControl
         {
             _blocks.Remove(chip);
             NoBlocks.Visibility = _blocks.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+            RefreshInputChoices();
             RefreshPreview();
         }
     }
@@ -399,6 +514,13 @@ public sealed partial class CardEditorView : UserControl
         var definition = CardBuilder.BuildCard(name.Length > 0 ? name : "Aperçu",
                                                _blocks.Select(b => b.Section), Environment.UserName);
         _preview = new CardRuntime(definition, "");
+
+        // Les saisies déjà faites dans l'aperçu sont rejouées : on teste
+        // souvent un filtre juste après avoir tapé la valeur qu'il compare.
+        foreach (var (id, value) in _previewInputs)
+        {
+            _preview.OnInteraction(new ViewInteraction(id, value));
+        }
         _preview.OnStateUpdated(_bus.Current);
     }
 }

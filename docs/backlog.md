@@ -18,6 +18,9 @@ Palworld pour être validé.
       sans perdre le focus pendant qu'un snapshot arrive.
 - [ ] Card `Recherche` : les quatre champs filtrent la liste, et les réglages
       sont retrouvés au lancement suivant (`%LOCALAPPDATA%\Overkit\card-inputs.json`).
+- [ ] Éditeur in-game : créer une saisie par « Demander une valeur au joueur »,
+      puis un filtre qui la vise via « Comparer à », et vérifier que l'aperçu
+      réagit à la frappe sans perdre la valeur quand un bloc est ajouté.
 - [ ] Coffres non détectés par le collecteur `bases` — la réflexion trouve les
       bases et les travailleurs, pas les conteneurs.
 - [ ] Orientation de la carte : la transformation affine est exacte sur les
@@ -38,11 +41,6 @@ Palworld pour être validé.
 
 ## Phase 3 — reste
 
-- [ ] Blocs interactifs dans l'éditeur in-game. Le moteur accepte les sections
-      `input`, `number`, `choice` et `toggle`, mais l'éditeur ne sait pas encore
-      les créer : une Card interactive s'écrit à la main en JSON. Il faut aussi
-      pouvoir comparer un filtre à `inputs.<id>` et pas seulement à une
-      constante.
 - [ ] Options de `choice` calculées par une expression (`options_from`) — pour
       proposer la liste des bases ou des espèces possédées plutôt qu'une liste
       figée.

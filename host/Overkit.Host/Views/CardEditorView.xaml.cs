@@ -84,7 +84,10 @@ public sealed partial class CardEditorView : UserControl
     {
         _bus = bus;
         _cards = cards;
-        Preview.Initialize(bus, BuildPreview);
+        // L'aperçu est interactif comme la Card finale, mais sans store : ses
+        // saisies disparaissent dès que les blocs changent, ce qui évite
+        // d'enregistrer les tâtonnements de l'éditeur.
+        Preview.Initialize(bus, BuildPreview, interaction => _preview?.OnInteraction(interaction));
         RefreshTargets();
     }
 

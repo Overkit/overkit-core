@@ -31,6 +31,33 @@ L'`id` s'écrit en reverse-DNS sur un domaine réellement détenu (`fr.moi.ma-ca
 
 Toute section accepte `when` : elle n'apparaît que si l'expression est vraie.
 
+## Sections interactives
+
+Une Card peut demander une saisie au joueur. Le champ déclare un `id`, et les autres sections relisent sa valeur sous `inputs.<id>`.
+
+| `type` | Effet | Champs |
+|---|---|---|
+| `input` | Champ texte | `id`, `label`, `placeholder`, `default` |
+| `number` | Saisie numérique | `id`, `label`, `default`, `min`, `max`, `step` |
+| `choice` | Liste déroulante | `id`, `label`, `default`, `options[]` : `value`, `label` |
+| `toggle` | Interrupteur | `id`, `label`, `default` |
+
+```json
+{ "type": "number", "id": "niveau_min", "label": "Niveau minimum",
+  "default": 1, "min": 1, "max": 60, "step": 5 },
+
+{ "type": "list", "source": "palbox.pals | where(level >= inputs.niveau_min)",
+  "columns": [ { "header": "PAL", "value": "species_id" } ] }
+```
+
+L'`id` est un nom de variable, pas un libellé : le changer casse les expressions qui le lisent, et fait repartir le réglage à sa valeur par défaut.
+
+`inputs.x` désigne toujours une saisie, jamais un champ du jeu — y compris dans un filtre où l'élément courant porterait une propriété du même nom. La valeur est typée d'après le champ : `number` donne un nombre, `toggle` un booléen, `input` et `choice` du texte. La position du champ dans le fichier n'a pas d'importance : une section placée avant lui lit quand même sa valeur.
+
+Les réglages sont conservés dans `%LOCALAPPDATA%\Overkit\card-inputs.json`, séparément de la Card : le fichier de Card reste partageable tel quel, et le destinataire repart des `default`.
+
+La Card `Recherche` livrée avec Overkit (`cards/recherche.card.json`) combine les quatre champs sur un même filtre.
+
 ## Le langage d'expressions
 
 Volontairement limité : pas de boucle, pas d'appel système, pas d'accès disque ou réseau. Chaque rendu dispose d'un budget de temps et un plafond d'éléments parcourus ; au-delà, la Card est suspendue avec un message plutôt que de ralentir le jeu.

@@ -16,6 +16,8 @@ Palworld pour être validé.
 - [ ] Sections interactives dans l'onglet Audit de base : le seuil, le filtre par
       base et la bascule « critiques seulement » doivent recalculer les alertes
       sans perdre le focus pendant qu'un snapshot arrive.
+- [ ] Card `Recherche` : les quatre champs filtrent la liste, et les réglages
+      sont retrouvés au lancement suivant (`%LOCALAPPDATA%\Overkit\card-inputs.json`).
 - [ ] Coffres non détectés par le collecteur `bases` — la réflexion trouve les
       bases et les travailleurs, pas les conteneurs.
 - [ ] Orientation de la carte : la transformation affine est exacte sur les
@@ -36,9 +38,17 @@ Palworld pour être validé.
 
 ## Phase 3 — reste
 
-- [ ] Sections interactives dans les Cards. Le mécanisme existe pour les modules
-      C# ; côté Cards il faut exposer les valeurs saisies à l'interpréteur
-      (espace de noms `inputs`) et les persister avec la Card.
+- [ ] Blocs interactifs dans l'éditeur in-game. Le moteur accepte les sections
+      `input`, `number`, `choice` et `toggle`, mais l'éditeur ne sait pas encore
+      les créer : une Card interactive s'écrit à la main en JSON. Il faut aussi
+      pouvoir comparer un filtre à `inputs.<id>` et pas seulement à une
+      constante.
+- [ ] Options de `choice` calculées par une expression (`options_from`) — pour
+      proposer la liste des bases ou des espèces possédées plutôt qu'une liste
+      figée.
+- [ ] Boutons et lignes cliquables dans les Cards : sans code à exécuter, il
+      faudrait leur donner un sens déclaratif (remettre les champs à zéro,
+      basculer une valeur).
 - [ ] Reprendre les vues Palbox, Craft et Carte en déclaratif maintenant que
       l'interaction existe. Elles sont intégrées au host faute de champs de
       saisie ; la carte demandera en plus une section de rendu graphique.

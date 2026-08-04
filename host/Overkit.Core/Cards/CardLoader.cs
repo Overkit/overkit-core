@@ -17,6 +17,7 @@ namespace Overkit.Host.Cards;
 public sealed class CardLoader(Action<string> log)
 {
     private readonly List<CardRuntime> _cards = [];
+    private readonly CardInputStore _inputs = new(log);
     private GameStateSnapshot _lastSnapshot = GameStateSnapshot.Empty;
 
     public IReadOnlyList<CardRuntime> Cards => _cards;
@@ -34,6 +35,7 @@ public sealed class CardLoader(Action<string> log)
     public void LoadAll(string builtInDirectory)
     {
         Directory.CreateDirectory(UserCardsDirectory);
+        _inputs.Load();
 
         // Les Cards du joueur sont chargées en premier : elles l'emportent sur
         // une Card fournie de même identifiant.
@@ -63,7 +65,7 @@ public sealed class CardLoader(Action<string> log)
                 {
                     continue; // déjà fournie par le joueur : sa version prime
                 }
-                _cards.Add(new CardRuntime(definition, path) { IsUserCard = isUser });
+                _cards.Add(new CardRuntime(definition, path, _inputs) { IsUserCard = isUser });
                 log($"Card chargée : {definition.Name} v{definition.Version}{(isUser ? "" : " (fournie)")}");
             }
             catch (Exception ex)
@@ -95,7 +97,7 @@ public sealed class CardLoader(Action<string> log)
         var path = Path.Combine(UserCardsDirectory, fileName);
         File.WriteAllText(path, CardBuilder.Serialize(definition));
 
-        var runtime = new CardRuntime(definition, path) { IsUserCard = true };
+        var runtime = new CardRuntime(definition, path, _inputs) { IsUserCard = true };
         runtime.OnStateUpdated(_lastSnapshot);
 
         var existing = _cards.FindIndex(c => c.Definition.Id == definition.Id);
@@ -141,6 +143,7 @@ public sealed class CardLoader(Action<string> log)
             return false;
         }
         _cards.Remove(card);
+        _inputs.Forget(card.Definition.Id);
         log($"Card supprimée : {card.Definition.Name}");
         CardDeleted?.Invoke(card);
         return true;

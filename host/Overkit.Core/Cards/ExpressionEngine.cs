@@ -61,6 +61,15 @@ public static class ExpressionEngine
         private readonly Stopwatch _stopwatch = Stopwatch.StartNew();
         private int _scanned;
 
+        /// <summary>
+        /// Valeurs des sections interactives de la Card, lisibles dans les
+        /// expressions sous « inputs.&lt;id&gt; ». Elles ne viennent pas du
+        /// snapshot : elles vivent hors du State Bus, d'où l'espace de noms
+        /// distinct plutôt qu'une propriété greffée sur la racine.
+        /// </summary>
+        public IReadOnlyDictionary<string, object?> Inputs { get; init; } =
+            new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+
         public void CountScan(int items = 1)
         {
             _scanned += items;
@@ -521,6 +530,14 @@ public static class ExpressionEngine
         if (segments.Length == 0)
         {
             return null;
+        }
+
+        // « inputs.x » désigne toujours une saisie de la Card, jamais un champ
+        // du jeu : la résolution s'arrête là, y compris dans un filtre où un
+        // élément porterait par hasard une propriété du même nom.
+        if (segments.Length == 2 && segments[0].Equals("inputs", StringComparison.OrdinalIgnoreCase))
+        {
+            return scope.Context.Inputs.GetValueOrDefault(segments[1]);
         }
 
         // Le chemin s'applique d'abord à l'élément courant (dans un filtre),

@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Text.Json;
 using Overkit.Sdk;
 
 namespace Overkit.Host.Cards;
@@ -10,11 +12,17 @@ namespace Overkit.Host.Cards;
 /// Une Card qui dépasse son budget ou dont une expression est invalide est
 /// suspendue avec un message explicite, jamais silencieusement (EXG-040).
 /// </summary>
-public sealed class CardRuntime(CardDefinition definition, string sourcePath)
+public sealed class CardRuntime(CardDefinition definition, string sourcePath, CardInputStore? inputStore = null)
 {
     private GameStateSnapshot _snapshot = GameStateSnapshot.Empty;
     private DateTime _suspendedAt;
     private int _consecutiveFailures;
+
+    /// <summary>
+    /// Saisies de la session. Sans store — l'aperçu de l'éditeur — elles ne
+    /// vivent que le temps de l'aperçu, ce qui est le comportement voulu.
+    /// </summary>
+    private readonly Dictionary<string, string> _values = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>Une suspension peut venir d'un pic passager : on retente, puis on abandonne.</summary>
     private static readonly TimeSpan RetryDelay = TimeSpan.FromSeconds(10);
@@ -30,6 +38,13 @@ public sealed class CardRuntime(CardDefinition definition, string sourcePath)
     public string? SuspendReason { get; private set; }
 
     public void OnStateUpdated(GameStateSnapshot snapshot) => _snapshot = snapshot;
+
+    /// <summary>Saisie d'une section interactive : retenue, puis relue par les expressions.</summary>
+    public void OnInteraction(ViewInteraction interaction)
+    {
+        _values[interaction.Id] = interaction.Value;
+        inputStore?.Set(definition.Id, interaction.Id, interaction.Value);
+    }
 
     public ModuleView BuildView()
     {
@@ -60,7 +75,9 @@ public sealed class CardRuntime(CardDefinition definition, string sourcePath)
             ]);
         }
 
-        var context = new ExpressionEngine.EvaluationContext();
+        // Les saisies sont résolues avant tout rendu : une section placée avant
+        // le champ dans le fichier lit quand même sa valeur.
+        var context = new ExpressionEngine.EvaluationContext { Inputs = CollectInputs() };
         var sections = new List<ViewSection>();
 
         var index = 0;
@@ -202,10 +219,99 @@ public sealed class CardRuntime(CardDefinition definition, string sourcePath)
                 return alerts.Count > 0 ? new AlertsSection(alerts) : null;
             }
 
+            case "input":
+                return section.Id is { Length: > 0 } textId
+                    ? new TextInputSection(textId, section.Label ?? "", InputString(textId), section.Placeholder ?? "")
+                    : new EmptySection("Section « input » sans « id ».");
+
+            case "number":
+                return section.Id is { Length: > 0 } numberId
+                    ? new NumberInputSection(numberId, section.Label ?? "", InputNumber(numberId),
+                        section.Min, section.Max, section.Step)
+                    : new EmptySection("Section « number » sans « id ».");
+
+            case "choice":
+            {
+                if (section.Id is not { Length: > 0 } choiceId)
+                {
+                    return new EmptySection("Section « choice » sans « id ».");
+                }
+                var options = section.Options
+                    .Select(option => new ChoiceOption(option.Value, option.Label ?? option.Value))
+                    .ToList();
+                return options.Count > 0
+                    ? new ChoiceSection(choiceId, section.Label ?? "", options, InputString(choiceId))
+                    : new EmptySection($"Section « choice » ({choiceId}) sans options.");
+            }
+
+            case "toggle":
+                return section.Id is { Length: > 0 } toggleId
+                    ? new ToggleSection(toggleId, section.Label ?? "", InputBool(toggleId))
+                    : new EmptySection("Section « toggle » sans « id ».");
+
             default:
                 return new EmptySection($"Type de section inconnu : « {section.Type} »");
         }
+
+        string InputString(string id) => ExpressionEngine.AsString(context.Inputs.GetValueOrDefault(id));
+        double InputNumber(string id) => ExpressionEngine.ToNumber(context.Inputs.GetValueOrDefault(id));
+        bool InputBool(string id) => ExpressionEngine.Truthy(context.Inputs.GetValueOrDefault(id));
     }
+
+    /// <summary>
+    /// Valeur courante de chaque section interactive : la saisie du joueur si
+    /// elle existe, sinon le `default` de la Card. Typée dès ici pour que
+    /// `inputs.seuil > 30` compare des nombres et pas des chaînes.
+    /// </summary>
+    private Dictionary<string, object?> CollectInputs()
+    {
+        var values = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+        foreach (var section in definition.Sections)
+        {
+            if (section.Id is not { Length: > 0 } id)
+            {
+                continue;
+            }
+            var raw = _values.TryGetValue(id, out var live) ? live : inputStore?.Get(definition.Id, id);
+
+            switch (section.Type.ToLowerInvariant())
+            {
+                case "input":
+                    values[id] = raw ?? DefaultText(section) ?? "";
+                    break;
+
+                case "choice":
+                    values[id] = raw ?? DefaultText(section) ?? section.Options.FirstOrDefault()?.Value ?? "";
+                    break;
+
+                case "number":
+                {
+                    var fallback = section.Default is { ValueKind: JsonValueKind.Number } number
+                        ? number.GetDouble()
+                        : section.Min;
+                    values[id] = raw is not null && double.TryParse(raw, NumberStyles.Float,
+                        CultureInfo.InvariantCulture, out var parsed)
+                        ? Math.Clamp(parsed, section.Min, section.Max)
+                        : fallback;
+                    break;
+                }
+
+                case "toggle":
+                    values[id] = raw is not null
+                        ? raw.Equals("true", StringComparison.OrdinalIgnoreCase)
+                        : section.Default is { ValueKind: JsonValueKind.True };
+                    break;
+            }
+        }
+        return values;
+    }
+
+    private static string? DefaultText(CardSection section) => section.Default switch
+    {
+        { ValueKind: JsonValueKind.String } text => text.GetString(),
+        { ValueKind: JsonValueKind.Number } number => number.GetDouble().ToString(CultureInfo.InvariantCulture),
+        _ => null,
+    };
 
     /// <summary>Remplace les {expressions} d'un texte par leur valeur évaluée.</summary>
     private static string Interpolate(string template, GameStateSnapshot snapshot,

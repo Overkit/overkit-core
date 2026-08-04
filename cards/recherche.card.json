@@ -1,0 +1,69 @@
+{
+  "id": "fr.overkit.recherche",
+  "name": "Recherche",
+  "version": "1.0.0",
+  "authors": ["Nallraen"],
+  "license": "MIT",
+  "state_requires": ["palbox"],
+  "min_schema": "1.0",
+
+  "sections": [
+    {
+      "type": "input",
+      "id": "nom",
+      "label": "Nom ou espèce",
+      "placeholder": "laisser vide pour tout voir"
+    },
+    {
+      "type": "number",
+      "id": "niveau_min",
+      "label": "Niveau minimum",
+      "default": 1,
+      "min": 1,
+      "max": 60,
+      "step": 5
+    },
+    {
+      "type": "choice",
+      "id": "genre",
+      "label": "Genre",
+      "default": "tous",
+      "options": [
+        { "value": "tous", "label": "Les deux" },
+        { "value": "male", "label": "Mâles" },
+        { "value": "female", "label": "Femelles" }
+      ]
+    },
+    {
+      "type": "toggle",
+      "id": "elite_seulement",
+      "label": "Talents élevés seulement (60+ en PV)",
+      "default": false
+    },
+
+    {
+      "type": "counters",
+      "items": [
+        {
+          "label": "Correspondances",
+          "value": "count(palbox.pals | where((inputs.nom = \"\" or contains(lower(species_id), lower(inputs.nom)) or contains(lower(nickname), lower(inputs.nom))) and level >= inputs.niveau_min and (inputs.genre = \"tous\" or gender = inputs.genre) and (not inputs.elite_seulement or talents.hp >= 60)))"
+        },
+        { "label": "Total en boîte", "value": "count(palbox.pals)" }
+      ]
+    },
+    {
+      "type": "list",
+      "source": "palbox.pals | where((inputs.nom = \"\" or contains(lower(species_id), lower(inputs.nom)) or contains(lower(nickname), lower(inputs.nom))) and level >= inputs.niveau_min and (inputs.genre = \"tous\" or gender = inputs.genre) and (not inputs.elite_seulement or talents.hp >= 60))",
+      "sort_by": "level",
+      "sort_desc": true,
+      "limit": 30,
+      "empty_text": "Aucun Pal ne correspond — élargis la recherche.",
+      "columns": [
+        { "header": "PAL", "value": "if(isset(nickname) and nickname != \"\", nickname, species_id)" },
+        { "header": "NIVEAU", "value": "level" },
+        { "header": "GENRE", "value": "gender" },
+        { "header": "TALENTS", "value": "concat(talents.hp, \" / \", talents.melee, \" / \", talents.shot, \" / \", talents.defense)" }
+      ]
+    }
+  ]
+}

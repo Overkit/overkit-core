@@ -34,7 +34,7 @@ public sealed class CardDefinition
 /// <summary>Une section de Card. `type` choisit le template de rendu.</summary>
 public sealed class CardSection
 {
-    /// <summary>text | counters | gauges | list | alert</summary>
+    /// <summary>text | counters | gauges | list | alert | input | number | choice | toggle</summary>
     [JsonPropertyName("type")] public string Type { get; set; } = "text";
 
     /// <summary>Texte libre ou expression selon le template.</summary>
@@ -61,6 +61,33 @@ public sealed class CardSection
 
     /// <summary>Pour une alerte par élément : chaque item de `source` produit une alerte si `when` est vrai.</summary>
     [JsonPropertyName("for_each")] public bool ForEach { get; set; }
+
+    // input / number / choice / toggle
+    //
+    // La saisie est relue par les autres sections sous « inputs.<id> ». L'`id`
+    // doit donc être stable : c'est le nom de la variable, pas un détail
+    // d'affichage.
+
+    [JsonPropertyName("id")] public string? Id { get; set; }
+    [JsonPropertyName("label")] public string? Label { get; set; }
+    [JsonPropertyName("placeholder")] public string? Placeholder { get; set; }
+
+    /// <summary>Valeur au premier affichage, avant toute saisie du joueur.</summary>
+    [JsonPropertyName("default")] public JsonElement? Default { get; set; }
+
+    // number
+    [JsonPropertyName("min")] public double Min { get; set; }
+    [JsonPropertyName("max")] public double Max { get; set; } = 9999;
+    [JsonPropertyName("step")] public double Step { get; set; } = 1;
+
+    /// <summary>choice — options littérales, valeur et libellé.</summary>
+    [JsonPropertyName("options")] public List<CardOption> Options { get; set; } = [];
+}
+
+public sealed class CardOption
+{
+    [JsonPropertyName("value")] public string Value { get; set; } = "";
+    [JsonPropertyName("label")] public string? Label { get; set; }
 }
 
 public sealed class CardItem

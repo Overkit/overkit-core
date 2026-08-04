@@ -42,6 +42,7 @@ overkit/
 - [x] Éditeur de Cards in-game : blocs guidés (compter / lister / alerter / afficher), filtres champ-opérateur-valeur, aperçu en direct, création-modification-suppression à chaud ; cards du joueur stockées hors installation (survivent aux mises à jour)
 - [x] Template `dotnet new overkit-module` + paquets NuGet (`Overkit.Contracts`, `Overkit.Sdk`, `Overkit.Templates`) — construits localement, publication en ligne non faite
 - [x] Sections interactives (saisie, nombre, choix, bascule, boutons, lignes de tableau cliquables) : le module décrit un champ, le host le rend et lui renvoie l'action par `OnInteraction` — démontré sur `Overkit.Module.BaseAudit` (seuil, filtre par base, critiques seulement)
+- [x] Cards interactives : sections `input`, `number`, `choice`, `toggle`, relues dans les expressions sous `inputs.<id>`, réglages conservés hors de la Card pour qu'elle reste partageable — Card `Recherche` livrée en exemple
 
 Le reste à faire, toutes phases confondues, est listé dans [backlog.md](backlog.md).
 

@@ -88,7 +88,7 @@ public sealed partial class PanelWindow : Window
     private void AddCardTab(CardRuntime card)
     {
         var view = new ModuleHostView { Visibility = Visibility.Collapsed };
-        view.Initialize(_bus, card.BuildView);
+        view.Initialize(_bus, card.BuildView, card.OnInteraction);
 
         var tag = "card:" + card.Definition.Id;
         _pages[tag] = view;
@@ -144,7 +144,7 @@ public sealed partial class PanelWindow : Window
         var tag = "card:" + card.Definition.Id;
         if (_pages.TryGetValue(tag, out var page) && page is ModuleHostView view)
         {
-            view.Initialize(_bus, card.BuildView);
+            view.Initialize(_bus, card.BuildView, card.OnInteraction);
         }
         var item = Nav.MenuItems.OfType<NavigationViewItem>()
             .FirstOrDefault(i => (i.Tag as string) == tag);

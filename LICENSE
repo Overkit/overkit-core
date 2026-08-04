@@ -1,14 +1,36 @@
-Copyright (c) 2026 Nallraen. All rights reserved. / Tous droits reserves.
+MIT License
 
-The sources in this repository (probe, host, dumper, dataset pipeline —
-the Overkit "core") are proprietary and closed while the project is in
-alpha. No permission is granted to use, copy, modify or distribute them.
+Copyright (c) 2026 Nallraen
 
-Les sources de ce depot (sonde, host, dumper, pipeline de dataset — le
-« socle » Overkit) sont proprietaires et fermees pendant l'alpha. Aucune
-permission d'utilisation, de copie, de modification ou de distribution
-n'est accordee.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-The public binaries are distributed under their own end user license:
-see release/LICENSE-BINARY.txt. The upcoming add-on ecosystem (SDK,
-modules, cards) will be published under open-source licenses.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+Note on distributed data / Note sur les données distribuées
+
+Dataset files shipped with releases are transformed data derived from
+Palworld, © Pocketpair. They are redistributed the way community wikis and
+calculators do, and will be removed on request from the publisher. Game
+assets (icons, map images, sounds) are never redistributed.
+
+Les fichiers de dataset livrés avec les releases sont des données
+transformées dérivées de Palworld, © Pocketpair. Elles sont redistribuées
+comme le font les wikis et calculateurs communautaires, et seront retirées
+sur demande de l'éditeur. Les assets du jeu (icônes, images de carte, sons)
+ne sont jamais redistribués.

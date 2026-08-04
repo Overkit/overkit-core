@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageType>Template</PackageType>
+    <PackageId>Overkit.Templates</PackageId>
+    <Version>0.2.0-alpha</Version>
+    <Title>Overkit module templates</Title>
+    <Authors>Nallraen</Authors>
+    <Description>Project template for Overkit modules: dotnet new overkit-module</Description>
+    <PackageTags>dotnet-new;templates;Overkit;Palworld</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/Overkit/overkit-core</PackageProjectUrl>
+
+    <TargetFramework>net8.0</TargetFramework>
+    <IncludeContentInPack>true</IncludeContentInPack>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <ContentTargetFolders>content</ContentTargetFolders>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+    <EnableDefaultItems>false</EnableDefaultItems>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Le contenu du template est copié tel quel : il ne doit être ni
+         compilé, ni restauré avec ce projet. -->
+    <Content Include="templates\**\*" Exclude="templates\**\bin\**;templates\**\obj\**" />
+    <Compile Remove="**\*" />
+    <None Remove="**\*" />
+  </ItemGroup>
+
+</Project>

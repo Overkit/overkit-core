@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
 
     <PackageId>Overkit.Sdk</PackageId>
-    <Version>0.1.0-alpha</Version>
+    <Version>0.2.0-alpha</Version>
     <Authors>Nallraen</Authors>
     <Description>SDK for building Overkit modules — the all-in-one Palworld overlay. Read-only access to the live game state through an immutable snapshot.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>

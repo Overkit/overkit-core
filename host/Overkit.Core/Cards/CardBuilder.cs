@@ -85,7 +85,10 @@ public static class CardBuilder
         var slug = Slugify(name);
         return new CardDefinition
         {
-            Id = $"com.{(string.IsNullOrWhiteSpace(author) ? "joueur" : Slugify(author))}.{slug}",
+            // Préfixe « local » plutôt qu'un TLD réel : la card est créée dans
+            // l'éditeur, on ne connaît aucun domaine appartenant au joueur. Un
+            // identifiant publié au registre sera renommé en reverse-DNS.
+            Id = $"local.{(string.IsNullOrWhiteSpace(author) ? "joueur" : Slugify(author))}.{slug}",
             Name = name,
             Version = "1.0.0",
             Authors = string.IsNullOrWhiteSpace(author) ? [] : [author],

@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Nallraen",
+  "classifications": ["Overkit", "Palworld", "Module", "Plugin"],
+  "identity": "Overkit.Module.Template",
+  "name": "Overkit module",
+  "shortName": "overkit-module",
+  "description": "A read-only Overkit module: receives the game state and describes a view. Loads from the overlay's Modules/ folder.",
+  "tags": {
+    "language": "C#",
+    "type": "project"
+  },
+  "sourceName": "MyOverkitModule",
+  "preferNameDirectory": true,
+  "symbols": {
+    "moduleName": {
+      "type": "parameter",
+      "datatype": "string",
+      "defaultValue": "My module",
+      "replaces": "MODULE_DISPLAY_NAME",
+      "description": "Name shown as the panel tab."
+    },
+    "moduleAuthor": {
+      "type": "parameter",
+      "datatype": "string",
+      "defaultValue": "unknown",
+      "replaces": "MODULE_AUTHOR",
+      "description": "Author name, used in the manifest and in the module id."
+    },
+    "idPrefix": {
+      "type": "parameter",
+      "datatype": "string",
+      "defaultValue": "com",
+      "replaces": "MODULE_ID_PREFIX",
+      "description": "Top-level domain of the reverse-DNS module id: com, fr, io, dev..."
+    },
+
+    "authorLower": {
+      "type": "generated",
+      "generator": "casing",
+      "parameters": { "source": "moduleAuthor", "toLower": true }
+    },
+    "authorSlug": {
+      "type": "generated",
+      "generator": "regex",
+      "dataType": "string",
+      "replaces": "MODULE_AUTHOR_SLUG",
+      "parameters": {
+        "source": "authorLower",
+        "steps": [
+          { "regex": "[^a-z0-9]+", "replacement": "-" },
+          { "regex": "(^-+|-+$)", "replacement": "" }
+        ]
+      }
+    },
+
+    "nameLower": {
+      "type": "generated",
+      "generator": "casing",
+      "parameters": { "source": "moduleName", "toLower": true }
+    },
+    "moduleSlug": {
+      "type": "generated",
+      "generator": "regex",
+      "dataType": "string",
+      "replaces": "MODULE_SLUG",
+      "parameters": {
+        "source": "nameLower",
+        "steps": [
+          { "regex": "[^a-z0-9]+", "replacement": "-" },
+          { "regex": "(^-+|-+$)", "replacement": "" }
+        ]
+      }
+    }
+  }
+}

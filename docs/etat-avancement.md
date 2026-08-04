@@ -43,6 +43,10 @@ overkit/
 - [ ] Template `dotnet new overkit-module` + package NuGet du SDK
 - [ ] Sections interactives (saisie, sélection) — le déclaratif v1 ne couvre que l'affichage, d'où les vues Palbox/Craft/Carte restées intégrées
 
+**Écosystème — dépôts de registre** (prévu)
+
+Trois dépôts distincts recenseront les add-ons communautaires, publication par pull request (EXG-081) : modules C#, scripts Lua, et Cards JSON. Un manifeste par add-on, validation du schéma et de la licence en CI, merge = apparition au catalogue.
+
 **Phase 2 — Modules fondateurs** (en cours depuis le 02/08/2026)
 
 - [x] Audit de base : alertes faim/santé mentale des travailleurs (validé sur données réelles)

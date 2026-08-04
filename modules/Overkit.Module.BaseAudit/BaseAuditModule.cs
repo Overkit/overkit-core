@@ -19,7 +19,7 @@ public sealed class BaseAuditModule : IOverkitModule
 
     public ModuleManifest Manifest { get; } = new()
     {
-        Id = "com.overkit.base-audit",
+        Id = "fr.overkit.base-audit",
         Name = "Audit de base",
         Version = "1.0.0",
         Authors = ["Nallraen"],

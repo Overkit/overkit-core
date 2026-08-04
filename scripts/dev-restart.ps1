@@ -35,14 +35,14 @@ if ($Fast) {
     }
 }
 
-# 3) Déploiement des Cards et des modules à côté de l'exécutable.
-# Purge d'abord : sans ça, une Card renommée ou un module déplacé laisse un
-# doublon fantôme qui se recharge à chaque démarrage.
-Write-Host "[3/4] Deploiement des cards et modules..." -ForegroundColor Cyan
-foreach ($dir in @("$hostDir\Cards", "$hostDir\Modules")) {
-    if (Test-Path $dir) { Remove-Item $dir -Recurse -Force }
-    New-Item -ItemType Directory -Force $dir | Out-Null
-}
+# 3) Déploiement des Cards fournies et des modules à côté de l'exécutable.
+# Modules purgés (un module déplacé laisserait un doublon fantôme) ; Cards
+# fournies écrasées sans purge. Les cards créées in-game vivent dans
+# %LOCALAPPDATA%\Overkit\Cards et ne sont jamais touchées ici.
+Write-Host "[3/4] Deploiement des cards fournies et des modules..." -ForegroundColor Cyan
+if (Test-Path "$hostDir\Modules") { Remove-Item "$hostDir\Modules" -Recurse -Force }
+New-Item -ItemType Directory -Force "$hostDir\Modules" | Out-Null
+New-Item -ItemType Directory -Force "$hostDir\Cards" | Out-Null
 
 $cards = Get-ChildItem "$repo\cards" -Filter *.json -ErrorAction SilentlyContinue
 foreach ($card in $cards) {

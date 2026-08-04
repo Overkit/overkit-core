@@ -23,6 +23,9 @@ public sealed class CardRuntime(CardDefinition definition, string sourcePath)
 
     public CardDefinition Definition => definition;
     public string SourcePath => sourcePath;
+
+    /// <summary>Card du joueur (modifiable et supprimable) plutôt que fournie avec Overkit.</summary>
+    public bool IsUserCard { get; init; }
     public bool Suspended { get; private set; }
     public string? SuspendReason { get; private set; }
 

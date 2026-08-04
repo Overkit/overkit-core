@@ -42,7 +42,6 @@ public sealed partial class CardEditorView : UserControl
 {
     private StateBus _bus = null!;
     private CardLoader _cards = null!;
-    private string _cardsDirectory = "";
 
     private readonly ObservableCollection<FilterChip> _filters = [];
     private readonly ObservableCollection<BlockChip> _blocks = [];
@@ -81,11 +80,10 @@ public sealed partial class CardEditorView : UserControl
         UpdateBlockTypeUi();
     }
 
-    public void Initialize(StateBus bus, CardLoader cards, string cardsDirectory)
+    public void Initialize(StateBus bus, CardLoader cards)
     {
         _bus = bus;
         _cards = cards;
-        _cardsDirectory = cardsDirectory;
         Preview.Initialize(bus, BuildPreview);
         RefreshTargets();
     }
@@ -95,7 +93,8 @@ public sealed partial class CardEditorView : UserControl
     {
         _suppressTargetChange = true;
         var items = new List<EditTargetItem> { new(null, "＋ Nouvelle card") };
-        items.AddRange(_cards.Cards.Select(c => new EditTargetItem(c, $"Modifier « {c.Definition.Name} »")));
+        items.AddRange(_cards.Cards.Select(c => new EditTargetItem(c,
+            $"Modifier « {c.Definition.Name} »" + (c.IsUserCard ? "" : " (fournie)"))));
         EditTarget.ItemsSource = items;
         EditTarget.SelectedIndex = _editing is null
             ? 0
@@ -132,8 +131,13 @@ public sealed partial class CardEditorView : UserControl
         }
         _filters.Clear();
         NoBlocks.Visibility = _blocks.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
-        DeleteButton.Visibility = Visibility.Visible;
-        SaveStatus.Text = $"Modification de « {card.Definition.Name} » — enregistre pour appliquer.";
+
+        // Une card fournie avec Overkit ne se supprime pas : l'enregistrer en
+        // crée une version personnelle, qui prend le dessus.
+        DeleteButton.Visibility = card.IsUserCard ? Visibility.Visible : Visibility.Collapsed;
+        SaveStatus.Text = card.IsUserCard
+            ? $"Modification de « {card.Definition.Name} » — enregistre pour appliquer."
+            : $"« {card.Definition.Name} » est fournie avec Overkit : l'enregistrer en créera ta version personnelle.";
         RefreshPreview();
     }
 
@@ -357,7 +361,7 @@ public sealed partial class CardEditorView : UserControl
             }
 
             var wasEditing = _editing is not null;
-            _cards.SaveAndLoad(card, _cardsDirectory);
+            _cards.SaveAndLoad(card);
 
             ResetEditor();
             SaveStatus.Text = wasEditing

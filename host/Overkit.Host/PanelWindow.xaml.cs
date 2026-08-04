@@ -21,7 +21,7 @@ public sealed partial class PanelWindow : Window
 
     private readonly StateBus _bus;
 
-    public PanelWindow(StateBus bus, RefData refData, ModuleLoader loader, CardLoader cards, string cardsDirectory)
+    public PanelWindow(StateBus bus, RefData refData, ModuleLoader loader, CardLoader cards)
     {
         _bus = bus;
         InitializeComponent();
@@ -46,7 +46,7 @@ public sealed partial class PanelWindow : Window
         Breeding.Initialize(bus, refData);
         Map.Initialize(bus, refData);
 
-        Editor.Initialize(bus, cards, cardsDirectory);
+        Editor.Initialize(bus, cards);
 
         _pages["palbox"] = Palbox;
         _pages["craft"] = Craft;

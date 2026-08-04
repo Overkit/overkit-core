@@ -91,3 +91,12 @@ La Card `Alertes` livrée avec Overkit (`cards/alertes.card.json`) combine ces t
 ## Diagnostic
 
 Les erreurs de chargement et de suspension sont écrites dans `overkit.log`, à côté de l'exécutable (accessible aussi par le menu de l'icône près de l'horloge).
+
+## Où vivent les Cards
+
+| Emplacement | Contenu | Mise à jour d'Overkit |
+|---|---|---|
+| `%LOCALAPPDATA%\Overkit\Cards` | Les Cards créées avec l'éditeur in-game | **Jamais touchées** |
+| `<installation>\Cards` | Les Cards fournies avec Overkit | Remplacées |
+
+L'éditeur écrit toujours dans le dossier du joueur : une mise à jour d'Overkit ne peut donc pas effacer une Card créée. Modifier une Card fournie en crée une copie personnelle, qui prend le dessus sur l'originale.

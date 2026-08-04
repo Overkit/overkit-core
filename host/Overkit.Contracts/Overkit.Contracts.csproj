@@ -8,7 +8,7 @@
     <!-- Types du State Bus générés depuis schema/state-bus.v1.schema.json.
          Publiés en paquet car le SDK les expose aux modules tiers. -->
     <PackageId>Overkit.Contracts</PackageId>
-    <Version>0.2.0-alpha</Version>
+    <Version>0.3.0-alpha</Version>
     <Authors>Nallraen</Authors>
     <Description>State Bus contract types for Overkit modules, generated from the JSON Schema.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>

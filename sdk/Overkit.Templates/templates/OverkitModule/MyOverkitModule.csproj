@@ -12,7 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Overkit.Sdk" Version="0.2.0-alpha" Private="false" ExcludeAssets="runtime" />
+    <PackageReference Include="Overkit.Sdk" Version="0.3.0-alpha" Private="false" ExcludeAssets="runtime" />
   </ItemGroup>
 
 </Project>

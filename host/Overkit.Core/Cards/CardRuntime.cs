@@ -174,8 +174,9 @@ public sealed class CardRuntime(CardDefinition definition, string sourcePath, Ca
                     foreach (var element in elements.Take(Math.Clamp(section.Limit, 1, 500)))
                     {
                         context.CountScan();
-                        rows.Add(new TableRow(
-                            section.Columns.Select(c => ExpressionEngine.AsString(Eval(c.Value, element))).ToList()));
+                        rows.Add(new TableRow(section.Columns
+                            .Select(c => new TableCell(ExpressionEngine.AsString(Eval(c.Value, element))))
+                            .ToList()));
                     }
                 }
                 if (rows.Count == 0)

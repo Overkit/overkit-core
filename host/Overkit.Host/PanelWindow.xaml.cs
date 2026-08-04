@@ -41,21 +41,21 @@ public sealed partial class PanelWindow : Window
             sender.Hide();
         };
 
-        Palbox.Initialize(bus, refData);
-        Craft.Initialize(bus, refData);
         Breeding.Initialize(bus, refData);
         Map.Initialize(bus, refData);
 
         Editor.Initialize(bus, cards);
 
-        _pages["palbox"] = Palbox;
-        _pages["craft"] = Craft;
         _pages["breeding"] = Breeding;
         _pages["map"] = Map;
         _pages["editor"] = Editor;
 
         AddModuleTabs(bus, loader);
         AddCardTabs(bus, cards);
+
+        // Les modules livrés ouvrent la navigation : sans cette sélection, le
+        // premier onglet déclaré en XAML s'afficherait à la place.
+        Nav.SelectedItem = Nav.MenuItems.FirstOrDefault();
 
         // L'éditeur agit à chaud : création, mise à jour et suppression se
         // répercutent immédiatement sur les onglets.
@@ -110,10 +110,13 @@ public sealed partial class PanelWindow : Window
         }
     }
 
-    /// <summary>Un onglet par module chargé, inséré après la Palbox.</summary>
+    /// <summary>
+    /// Un onglet par module, en tête de navigation : les modules livrés
+    /// (Palbox, Craft) sont enregistrés en premier, les modules tiers suivent.
+    /// </summary>
     private void AddModuleTabs(StateBus bus, ModuleLoader loader)
     {
-        var insertAt = 1;
+        var insertAt = 0;
         foreach (var module in loader.Modules)
         {
             var view = new ModuleHostView();

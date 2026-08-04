@@ -23,8 +23,8 @@
             SelectionChanged="Nav_SelectionChanged"
             Margin="0,0,0,10">
             <NavigationView.MenuItems>
-                <NavigationViewItem Content="Palbox" Tag="palbox" IsSelected="True" />
-                <NavigationViewItem Content="Checklist de craft" Tag="craft" />
+                <!-- Palbox et Craft sont des modules déclaratifs : leur onglet
+                     est inséré au chargement, comme celui d'un module tiers. -->
                 <NavigationViewItem Content="Accouplement" Tag="breeding" />
                 <NavigationViewItem Content="Carte" Tag="map" />
                 <NavigationViewItem Content="＋ Créer une card" Tag="editor" />
@@ -32,8 +32,6 @@
         </NavigationView>
 
         <Grid x:Name="Pages" Grid.Row="2">
-            <views:PalboxView x:Name="Palbox" />
-            <views:CraftView x:Name="Craft" Visibility="Collapsed" />
             <views:BreedingView x:Name="Breeding" Visibility="Collapsed" />
             <views:MapView x:Name="Map" Visibility="Collapsed" />
             <views:CardEditorView x:Name="Editor" Visibility="Collapsed" />

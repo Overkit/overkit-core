@@ -101,7 +101,18 @@ return new ModuleView(Manifest.Name, [
 ]);
 ```
 
-`AlertLevel` (`Info`, `Warning`, `Critical`) colore une alerte, une ligne de tableau (`TableRow.Emphasis`) ou une jauge.
+`AlertLevel` (`Info`, `Warning`, `Critical`) colore une alerte, une jauge, une ligne de tableau (`TableRow.Emphasis`) ou une cellule seule.
+
+Une cellule est une chaîne dans le cas courant — `new TableRow(["Lamball", "12"])` — et un `TableCell` quand il faut colorer cette cellule-là ou lui adjoindre une ligne secondaire :
+
+```csharp
+new TableRow([
+    new TableCell(nickname, Secondary: species),          // espèce sous le surnom
+    new TableCell($"{have}/{needed}", AlertLevel.Critical), // le chiffre qui manque, en rouge
+])
+```
+
+L'emphase de la cellule l'emporte sur celle de la ligne.
 
 ## Sections interactives
 
@@ -141,6 +152,8 @@ La saisie texte n'est remontée qu'à la validation, et le rafraîchissement pé
 
 ## Publier
 
-Le module de référence livré avec Overkit est [`modules/Overkit.Module.BaseAudit`](../modules/Overkit.Module.BaseAudit) : audit de faim et de santé mentale, avec seuil réglable et filtre par base. C'est le meilleur point de départ après le template.
+Le module de référence livré séparément est [`modules/Overkit.Module.BaseAudit`](../modules/Overkit.Module.BaseAudit) : audit de faim et de santé mentale, avec seuil réglable et filtre par base. C'est le meilleur point de départ après le template.
+
+Les onglets Palbox et Craft sont eux aussi des modules déclaratifs ([`host/Overkit.Core/Modules`](../host/Overkit.Core/Modules)), enregistrés au démarrage au lieu d'être chargés depuis une DLL. Ils passent par le même contrat : ce qu'ils font, un module tiers peut le faire.
 
 Un dépôt de registre recensera les modules communautaires, publication par pull request avec validation du manifeste et de la licence en CI.

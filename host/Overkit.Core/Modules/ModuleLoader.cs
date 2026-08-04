@@ -79,6 +79,35 @@ public sealed class ModuleLoader
              $"{_modules.Count(m => m.Status != ModuleStatus.Active) + _rejected.Count} inactif(s)");
     }
 
+    /// <summary>
+    /// Enregistre un module livré avec Overkit. Il passe par le même contrat et
+    /// le même contrôle de compatibilité qu'un module tiers : ce qu'un module
+    /// interne sait faire, un module externe le sait aussi.
+    /// </summary>
+    public LoadedModule Register(IOverkitModule instance)
+    {
+        var module = new LoadedModule
+        {
+            Manifest = instance.Manifest,
+            Instance = instance,
+            SourcePath = "",
+        };
+
+        if (CheckCompatibility(module.Manifest) is { } reason)
+        {
+            module.Status = ModuleStatus.Incompatible;
+            module.Reason = reason;
+            _log($"Module interne '{module.Manifest.Name}' inactif : {reason}");
+        }
+        else
+        {
+            instance.Initialize(new ModuleContext(module.Manifest, _refData, _log));
+        }
+
+        _modules.Add(module);
+        return module;
+    }
+
     private void TryLoad(string dllPath)
     {
         try

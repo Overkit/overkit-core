@@ -18,6 +18,10 @@ Palworld pour être validé.
       sans perdre le focus pendant qu'un snapshot arrive.
 - [ ] Card `Recherche` : les quatre champs filtrent la liste, et les réglages
       sont retrouvés au lancement suivant (`%LOCALAPPDATA%\Overkit\card-inputs.json`).
+- [ ] Onglets Palbox et Craft repassés en déclaratif : recherche, tri, choix de
+      recette et quantité, avec la même lisibilité qu'avant la conversion —
+      c'est le point à regarder de près, le rendu générique est plus sobre que
+      les vues WinUI qu'il remplace.
 - [ ] Éditeur in-game : créer une saisie par « Demander une valeur au joueur »,
       puis un filtre qui la vise via « Comparer à », et vérifier que l'aperçu
       réagit à la frappe sans perdre la valeur quand un bloc est ajouté.
@@ -47,9 +51,12 @@ Palworld pour être validé.
 - [ ] Boutons et lignes cliquables dans les Cards : sans code à exécuter, il
       faudrait leur donner un sens déclaratif (remettre les champs à zéro,
       basculer une valeur).
-- [ ] Reprendre les vues Palbox, Craft et Carte en déclaratif maintenant que
-      l'interaction existe. Elles sont intégrées au host faute de champs de
-      saisie ; la carte demandera en plus une section de rendu graphique.
+- [ ] Reprendre la vue Carte en déclaratif. Palbox et Craft sont passés
+      modules ; la carte demande en plus une section de rendu graphique
+      (fond, points, tracés) que le modèle de vue ne décrit pas.
+- [ ] Accouplement reste une vue intégrée : elle a besoin d'une sélection de
+      Pal parent à deux niveaux, que `TableSection` + `SelectionId` ne couvre
+      qu'à moitié.
 
 ## Phase 4
 

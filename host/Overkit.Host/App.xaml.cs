@@ -69,9 +69,12 @@ public partial class App : Application
         // live automatique dès que la Sonde répond (EXG-011).
         _probe = new ProbeConnection(new Uri(settings.ProbeUri), _bus, Log);
 
-        // Modules tiers (§5.3) : chargés depuis Modules/ à côté de l'exécutable,
-        // isolés, et alimentés par le bus comme les vues intégrées.
+        // Modules (§5.3). Palbox et Craft sont livrés avec Overkit mais passent
+        // par le même contrat que les modules tiers : ils sont enregistrés
+        // d'abord, donc affichés en premier, puis viennent les DLL de Modules/.
         var loader = new ModuleLoader(refData, Log);
+        loader.Register(new Overkit.Host.Modules.PalboxModule());
+        loader.Register(new Overkit.Host.Modules.CraftModule());
         loader.LoadAll(Path.Combine(AppContext.BaseDirectory, "Modules"));
         _bus.SnapshotUpdated += loader.Dispatch;
 

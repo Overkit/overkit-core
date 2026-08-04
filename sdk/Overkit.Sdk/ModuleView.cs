@@ -43,7 +43,18 @@ public sealed record TableSection(
     string? SelectionId = null) : ViewSection;
 
 /// <param name="Key">Clé renvoyée au clic — requise pour une ligne sélectionnable.</param>
-public sealed record TableRow(IReadOnlyList<string> Cells, AlertLevel? Emphasis = null, string? Key = null, bool Selected = false);
+public sealed record TableRow(IReadOnlyList<TableCell> Cells, AlertLevel? Emphasis = null, string? Key = null, bool Selected = false);
+
+/// <summary>
+/// Cellule d'un tableau. La conversion implicite depuis une chaîne garde le
+/// cas courant lisible — <c>new TableRow(["Lamball", "12"])</c> — tout en
+/// laissant colorer une cellule seule ou lui adjoindre une ligne secondaire
+/// (espèce sous le surnom, quantité sous un total).
+/// </summary>
+public sealed record TableCell(string Text, AlertLevel? Emphasis = null, string? Secondary = null)
+{
+    public static implicit operator TableCell(string text) => new(text);
+}
 
 /// <summary>Jauges (faim, santé mentale, progression…) : valeur sur maximum.</summary>
 public sealed record GaugesSection(IReadOnlyList<GaugeItem> Items) : ViewSection;

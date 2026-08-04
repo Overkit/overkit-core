@@ -165,7 +165,7 @@ public sealed partial class ModuleHostView : UserControl
     private UIElement BuildTable(TableSection section)
     {
         var panel = new StackPanel { Spacing = 2 };
-        panel.Children.Add(BuildRow(section.Headers, header: true, null));
+        panel.Children.Add(BuildRow(section.Headers.Select(h => new TableCell(h)).ToList(), header: true, null));
         foreach (var row in section.Rows)
         {
             var cells = BuildRow(row.Cells, header: false, row.Emphasis);
@@ -197,25 +197,46 @@ public sealed partial class ModuleHostView : UserControl
         }
         return panel;
 
-        static UIElement BuildRow(IReadOnlyList<string> cells, bool header, AlertLevel? emphasis)
+        static UIElement BuildRow(IReadOnlyList<TableCell> cells, bool header, AlertLevel? rowEmphasis)
         {
             var grid = new Grid { ColumnSpacing = 12, Padding = new Thickness(0, 6, 0, 6) };
             for (var i = 0; i < cells.Count; i++)
             {
                 grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
                 var text = new TextBlock
                 {
-                    Text = cells[i],
+                    Text = cells[i].Text,
                     FontSize = header ? 11 : 13,
                     Opacity = header ? 0.45 : 1,
                     TextWrapping = TextWrapping.Wrap,
+                    VerticalAlignment = VerticalAlignment.Center,
                 };
-                if (emphasis is { } level)
+
+                // La cellule l'emporte sur la ligne : colorer un seul chiffre
+                // manquant est plus lisible que teindre toute la ligne.
+                if ((cells[i].Emphasis ?? rowEmphasis) is { } level)
                 {
                     text.Foreground = new SolidColorBrush(ColorFor(level));
                 }
-                Grid.SetColumn(text, i);
-                grid.Children.Add(text);
+
+                FrameworkElement content = text;
+                if (cells[i].Secondary is { Length: > 0 } secondary)
+                {
+                    var stack = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+                    stack.Children.Add(text);
+                    stack.Children.Add(new TextBlock
+                    {
+                        Text = secondary,
+                        FontSize = 12,
+                        Opacity = 0.55,
+                        TextWrapping = TextWrapping.Wrap,
+                    });
+                    content = stack;
+                }
+
+                Grid.SetColumn(content, i);
+                grid.Children.Add(content);
             }
             return grid;
         }

@@ -44,6 +44,7 @@ overkit/
 - [x] Sections interactives (saisie, nombre, choix, bascule, boutons, lignes de tableau cliquables) : le module décrit un champ, le host le rend et lui renvoie l'action par `OnInteraction` — démontré sur `Overkit.Module.BaseAudit` (seuil, filtre par base, critiques seulement)
 - [x] Cards interactives : sections `input`, `number`, `choice`, `toggle`, relues dans les expressions sous `inputs.<id>`, réglages conservés hors de la Card pour qu'elle reste partageable — Card `Recherche` livrée en exemple
 - [x] Éditeur in-game : bloc « Demander une valeur au joueur » (texte, nombre, choix, oui/non) et filtres comparés à une saisie plutôt qu'à une constante — une Card interactive se crée sans écrire de JSON
+- [x] Palbox et Craft repris en modules déclaratifs, enregistrés au démarrage par le même chemin que les modules tiers ; cellules de tableau enrichies (emphase par cellule, ligne secondaire). Restent intégrés : Carte (rendu graphique) et Accouplement (sélection à deux niveaux)
 
 Le reste à faire, toutes phases confondues, est listé dans [backlog.md](backlog.md).
 

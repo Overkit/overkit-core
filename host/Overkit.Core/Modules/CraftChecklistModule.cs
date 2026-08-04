@@ -15,7 +15,7 @@ public sealed record Checklist(RecipeInfo Recipe, int Quantity, IReadOnlyList<Ch
 /// </summary>
 public static class CraftChecklistModule
 {
-    public static Checklist Compute(RecipeInfo recipe, int quantity, GameStateSnapshot snapshot, RefData refData)
+    public static Checklist Compute(RecipeInfo recipe, int quantity, GameStateSnapshot snapshot, IRefData refData)
     {
         // Stock total par objet, tous conteneurs confondus (sac, clés,
         // nourriture, coffres).

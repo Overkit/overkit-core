@@ -3,7 +3,7 @@
   <PropertyGroup>
     <PackageType>Template</PackageType>
     <PackageId>Overkit.Templates</PackageId>
-    <Version>0.2.0-alpha</Version>
+    <Version>0.3.0-alpha</Version>
     <Title>Overkit module templates</Title>
     <Authors>Nallraen</Authors>
     <Description>Project template for Overkit modules: dotnet new overkit-module</Description>

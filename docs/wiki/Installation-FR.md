@@ -31,7 +31,7 @@ Télécharge `UE4SS-Palworld.zip` depuis le lien ci-dessus, puis extrais **`dwma
 Depuis la [dernière release](https://github.com/Overkit/overkit/releases), télécharge **`Overkit-Probe-….zip`** (ou récupère le mod sur Nexus Mods) et copie le dossier :
 
 ```
-PalworldMod\OverkitProbe   →   ...\ue4ss\Mods\OverkitProbe
+OverkitProbe   →   ...\ue4ss\Mods\OverkitProbe
 ```
 
 Ce dossier contient la DLL de la sonde, son `mapping.json` et un `enabled.txt`. Rien d'autre à configurer.

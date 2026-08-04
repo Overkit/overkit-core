@@ -31,7 +31,7 @@ Download `UE4SS-Palworld.zip` from the link above, and extract **`dwmapi.dll`** 
 From the [latest release](https://github.com/Overkit/overkit/releases), download **`Overkit-Probe-….zip`** (or get the mod from Nexus Mods) and copy the folder:
 
 ```
-PalworldMod\OverkitProbe   →   ...\ue4ss\Mods\OverkitProbe
+OverkitProbe   →   ...\ue4ss\Mods\OverkitProbe
 ```
 
 That folder contains the probe DLL, its `mapping.json` and an `enabled.txt`. Nothing else to configure.

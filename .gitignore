@@ -11,6 +11,14 @@ build/
 out/
 CMakeUserPresets.json
 
+# Sources UE4SS et son sous-module UEPseudo, dont l'accès est gated par l'EULA
+# Epic : elles se clonent hors du dépôt (voir probe/README.md), et ne doivent
+# jamais y entrer même par accident si le workspace est placé ici.
+probe-workspace/
+RE-UE4SS/
+UEPseudo/
+deps/first/Unreal/
+
 # Rider / VS Code
 .idea/
 .vscode/
